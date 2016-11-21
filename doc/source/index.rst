@@ -11,7 +11,7 @@ Contents:
    readme
    installation
    usage
-   contributing
+   devref/index
 
 Indices and tables
 ==================
