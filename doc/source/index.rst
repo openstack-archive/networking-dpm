@@ -12,3 +12,4 @@ Contents:
    installation
    usage
    contributing
+   specs/index
