@@ -9,6 +9,7 @@ Contents:
    :maxdepth: 2
 
    readme
+   specs
    installation
    usage
    devref/index
