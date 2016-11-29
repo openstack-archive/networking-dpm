@@ -1,6 +1,6 @@
-===============================
-networking-dpm
-===============================
+====================
+About networking-dpm
+====================
 
 OpenStack Neutron mechanism driver and agent for IBM z Systems PR/SM hypervisor in DPM mode
 
@@ -14,8 +14,3 @@ contains the Neutron mechanism driver and l2 agent for DPM.
 * Documentation: TBD
 * Source: http://git.openstack.org/cgit/openstack/networking-dpm
 * Bugs: http://bugs.launchpad.net/networking-dpm
-
-Features
---------
-
-* TODO
