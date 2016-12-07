@@ -76,4 +76,9 @@ dpm_opts = [
 ]
 
 
+def list_opts():
+    return [
+        ('dpm', dpm_opts),
+    ]
+
 cfg.CONF.register_opts(dpm_opts, "dpm")
