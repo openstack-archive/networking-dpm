@@ -79,3 +79,9 @@ configuration."""))
 dpm_group = cfg.OptGroup(name="dpm", title="DPM Configuration")
 
 cfg.CONF.register_opts(dpm_opts, dpm_group)
+
+
+def list_opts():
+    return [
+        (dpm_group.name, dpm_opts),
+    ]
