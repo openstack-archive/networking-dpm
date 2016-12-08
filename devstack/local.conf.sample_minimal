@@ -1,0 +1,19 @@
+[[local|localrc]]
+ADMIN_PASSWORD=openstack
+MYSQL_PASSWORD=$ADMIN_PASSWORD
+RABBIT_PASSWORD=$ADMIN_PASSWORD
+SERVICE_PASSWORD=$ADMIN_PASSWORD
+SERVICE_TOKEN=$ADMIN_PASSWORD
+
+LOGFILE=$DEST/logs/stack.sh.log
+SCREEN_LOGDIR=$DEST/logs/screen
+
+
+enable_plugin networking-dpm http://git.openstack.org/openstack/networking-dpm
+
+# Keystone
+ENABLED_SERVICES=key
+# Neutron
+ENABLED_SERVICES+=,q-svc
+# Additional services
+ENABLED_SERVICES+=,rabbit,mysql
