@@ -13,6 +13,15 @@ enable_plugin networking-dpm http://git.openstack.org/openstack/networking-dpm
 # Keystone
 ENABLED_SERVICES=key
 # Neutron
-ENABLED_SERVICES+=,q-svc
+ENABLED_SERVICES+=,q-svc,q-agt
+Q_AGENT=dpm
 # Additional services
 ENABLED_SERVICES+=,rabbit,mysql
+
+
+[[post-config|/$Q_PLUGIN_CONF_FILE]]
+hmc = <hmc-ip>
+hmc_username = <hmc-user>
+hmc_password = <hmc-password>
+cpc_name = <cpc-name>
+physnet_adapter_mappings = "<mappings>"
