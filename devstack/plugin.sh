@@ -12,13 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# devstack/plugin.sh
-# networking-dpm actions for devstack plugin framework
 
-# Save trace setting
-XTRACE=$(set +o | grep xtrace)
-set +o xtrace
-
-
-# Restore xtrace
-$XTRACE
+dir=${GITDIR['networking-dpm']}
+source $dir/devstack/dpm_agent
