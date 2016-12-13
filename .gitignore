@@ -62,3 +62,6 @@ releasenotes/build
 
 # ignore credentials.json file
 credentials.json
+
+# ignore .vagrant files
+.vagrant
