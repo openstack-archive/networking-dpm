@@ -1,0 +1,38 @@
+Vagrant Devstack
+===============
+
+Install VirtualBox and Vagrant
+------------------------------
+
+Get networking-dpm
+------------------
+Clone the networking-dpm repository into your home directory and change to the vagrant directory:
+
+$ git clone https://git.openstack.org/openstack/networking-dpm.git
+$ cd networking-dpm/vagrant
+
+Update local.conf
+-----------------
+
+hmc = <hmc-ip>
+hmc_username = <hmc-user>
+hmc_password = <hmc-password>
+cpc_name = <cpc-name>
+physical_adapter_mappings = public:{<dpm-adapter-uuid>:<dpm-adapter-port-element-id>}
+
+Start devstack
+--------------
+
+$ vagrant up
+$ vagrant ssh
+$ sudo su - stack
+$ devstack/stack.sh
+
+
+Run test script
+---------------
+
+Note: Vagrant needs access to the configured HMC, otherwise the test will fail
+
+$ python /vagrant/test_neutron_dpm.py
+
