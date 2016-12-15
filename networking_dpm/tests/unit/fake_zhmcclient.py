@@ -47,6 +47,10 @@ class _BaseManager(object):
     def list(self):
         return self._objects
 
+    def _get(self, object_id):
+        """This is NOT an zhmclcient method, but used for test only"""
+        return self.find(**{'object-id': object_id})
+
     def find(self, **kwargs):
         matches = self.findall(**kwargs)
         num_matches = len(matches)
