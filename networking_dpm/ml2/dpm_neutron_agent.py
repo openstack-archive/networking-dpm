@@ -17,15 +17,13 @@
 from requests.packages import urllib3
 import sys
 
-
-from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_service import service
 from oslo_utils import uuidutils
 import zhmcclient
 
-from networking_dpm.ml2 import config  # noqa
+from networking_dpm.ml2 import config
 from networking_dpm.ml2.mech_dpm import AGENT_TYPE_DPM
 
 from neutron._i18n import _LE
@@ -36,6 +34,7 @@ from neutron.common import topics
 from neutron.plugins.ml2.drivers.agent import _agent_manager_base as amb
 from neutron.plugins.ml2.drivers.agent import _common_agent as ca
 
+CONF = config.cfg.CONF
 LOG = logging.getLogger(__name__)
 
 DPM_AGENT_BINARY = "neutron-dpm-agent"
@@ -49,13 +48,43 @@ ADAPTER_URI = "/api/adapters/"
 urllib3.disable_warnings()
 
 
+class PhysicalNetworkMapping(object):
+    """Mapping of physical networks to vswitches
+
+    Used by
+    * the regular notifications sent to the Neutron server
+    * the polling against the HMC for new NICs
+    """
+
+    def __init__(self):
+        self._vswitches = []
+        self._physnet_mapping = {}
+
+    def add_vswitch(self, physnet, vswitch):
+        self._vswitches.append(vswitch)
+        if not self._physnet_mapping.get(physnet):
+            self._physnet_mapping[physnet] = []
+        self._physnet_mapping[physnet].append(
+            vswitch.get_property('object-id'))
+
+    def get_all_vswitches(self):
+        """Get a list of all vswitch objects
+
+        :return : list of zhmcclient vswitch objects
+        """
+        return self._vswitches
+
+    def get_mapping(self):
+        """Get the physnet/vswitch mapping for reports to the Neutron server
+
+        :return : physical network / list of vswitch_ids mapping
+        :rtype : dict of lists of strings
+        """
+        return self._physnet_mapping
+
+
 class DPMRPCCallBack(sg_rpc.SecurityGroupAgentRpcCallbackMixin,
                      amb.CommonAgentManagerRpcCallBackBase):
-    # Set RPC API version to 1.0 by default.
-    # history
-    #   1.1 Support Security Group RPC
-    #   1.3 Added param devices_to_update to security_groups_provider_updated
-    #   1.4 Added support for network_update
     target = oslo_messaging.Target(version='1.4')
 
     def port_update(self, context, **kwargs):
@@ -71,7 +100,7 @@ class DPMRPCCallBack(sg_rpc.SecurityGroupAgentRpcCallbackMixin,
 
 class DPMManager(amb.CommonAgentManagerBase):
     def __init__(self, physnet_adapter_map, cpc):
-        self.physnet_adapter_map = physnet_adapter_map
+        self.physnet_map = physnet_adapter_map
         self.mac_device_name_mappings = dict()
         self.cpc = cpc
 
@@ -81,13 +110,13 @@ class DPMManager(amb.CommonAgentManagerBase):
         pass
 
     def get_agent_configurations(self):
-        return {'adapter_mappings': self.physnet_adapter_map}
+        return {'adapter_mappings': self.physnet_map.get_mapping()}
 
     def get_agent_id(self):
-        return 'dpm-%s' % cfg.CONF.host
+        return 'dpm-%s' % CONF.host
 
     def get_devices_modified_timestamps(self, devices):
-        # TODO(kevinbenton): this should be implemented to detect
+        # TODO(andreas_s): this should be implemented to detect
         # rapid Nova instance rebuilds.
         return {}
 
@@ -102,10 +131,12 @@ class DPMManager(amb.CommonAgentManagerBase):
         This method is able determine along those parameters if a NIC
         object should be managed by this agent or not.
 
-        :param nic: The nic object returned by hmc client
+        :param nic: The nic that should be checked
+        :type nic: zhmcclient._NIC
         :return: True if NIC is supposed to be managed by this agent
         :rtype: bool
         """
+        # Nova sets the Name of the NIC object to the UUID of the Neutron port
         if not uuidutils.is_uuid_like(nic.get_property('name')):
             LOG.debug("NIC %(nic)s seems not managed by OpenStack, as name "
                       "%(name)s is not a UUID. Skipping.",
@@ -113,9 +144,9 @@ class DPMManager(amb.CommonAgentManagerBase):
             return False
 
         # Nova adds the host identifier to the NICs description attribute
-        if cfg.CONF.host not in nic.get_property('description'):
+        if CONF.host not in nic.get_property('description'):
             LOG.debug("NIC %(nic)s not managed by this host %(host)s. "
-                      "Skipping.", {'nic': nic, 'host': cfg.CONF.host})
+                      "Skipping.", {'nic': nic, 'host': CONF.host})
             return False
         return True
 
@@ -125,18 +156,31 @@ class DPMManager(amb.CommonAgentManagerBase):
         :return: List of Neutron port UUID for which NICs exist
         """
         devices = set()
-        for physnet_vswitches in self.physnet_adapter_map.values():
-            for vswitch_id in physnet_vswitches:
-                vswitch = self.cpc.vswitches.find(**{'object-id': vswitch_id})
+
+        for vswitch in self.physnet_map.get_all_vswitches():
+            try:
                 for nic in vswitch.get_connected_nics():
                     try:
                         # Nova stores the Neutron Port ID in the NICs name
                         # field
                         if self._managed_by_agent(nic):
                             devices.add(nic.get_property('name'))
-                    except zhmcclient._exceptions.HTTPError:
-                        # NIC got deleted concurrently
-                        pass
+                    except zhmcclient.HTTPError:
+                        LOG.debug("NIC %s got deleted concurrently."
+                                  "Continuing...", nic)
+            except zhmcclient.HTTPError:
+                # TODO(andreas_s): Check general HMC connectivity first
+                LOG.warning(_LE("Retrieving connected VNICs for DPM vSwitch "
+                                "%(vswitch)s failed. DPM vSwitch object is "
+                                "not available anymore. This can happen if "
+                                "the corresponding adapter got removed "
+                                "from the system or the corresponding "
+                                "hipersockets network got deleted. Please"
+                                "adjust the physical_adapter_mappings "
+                                "configuration accordingly and start the "
+                                "agent again. Agent terminated!"),
+                            {'vswitch': vswitch})
+                sys.exit(1)
         return devices
 
     def get_extension_driver_type(self):
@@ -178,14 +222,14 @@ def _get_physnet_vswitch_map(cpc):
     :param cpc: A zhmcclient cpc object
     :return: Dict {physnet1:[vswitch_id],..}
     """
-    interface_mappings = cfg.CONF.dpm.physical_adapter_mappings
+    interface_mappings = CONF.dpm.physical_adapter_mappings
 
     if not interface_mappings:
         LOG.error(_LE("physical_adapter_mappings dpm configuration not "
                       "specified or empty value provided. Agent terminated!"))
         sys.exit(1)
 
-    mappings = {}
+    mappings = PhysicalNetworkMapping()
 
     for physnet, adapter_port_dict in interface_mappings.items():
         # TODO(andreas_s): Lift this restriction
@@ -210,10 +254,8 @@ def _get_physnet_vswitch_map(cpc):
                     'backing-adapter-uri': ADAPTER_URI + adapter_uuid,
                     'port': port
                 })
-                if not mappings.get(physnet):
-                    mappings[physnet] = []
-                mappings[physnet].append(vswitch.get_property('object-id'))
-            except zhmcclient._exceptions.NotFound:
+                mappings.add_vswitch(physnet, vswitch)
+            except zhmcclient.NotFound:
                 LOG.error(_LE("No vswitch object for adapter/port combination "
                               "%(adapt)s/%(port)s for physical network "
                               "%(net)s found. Agent terminated!"),
@@ -224,7 +266,7 @@ def _get_physnet_vswitch_map(cpc):
 
 
 def _validate_firewall_driver():
-    fw_driver = cfg.CONF.SECURITYGROUP.firewall_driver
+    fw_driver = CONF.SECURITYGROUP.firewall_driver
     supported_fw_drivers = ['neutron.agent.firewall.NoopFirewallDriver',
                             'noop']
     if fw_driver not in supported_fw_drivers:
@@ -255,7 +297,7 @@ def setup_logging():
     # zhmcclient library to warning
     logging.set_defaults(default_log_levels=logging.get_default_log_levels() +
                          ["zhmcclient=WARNING"])
-    logging.setup(cfg.CONF, 'neutron')
+    logging.setup(CONF, 'neutron')
     LOG.info(_LI("Logging enabled!"))
     LOG.info(_LI("%(prog)s"), {'prog': sys.argv[0]})
     LOG.debug("command line: %s", " ".join(sys.argv))
@@ -265,10 +307,10 @@ def main():
     common_config.init(sys.argv[1:])
     setup_logging()
 
-    hmc = cfg.CONF.dpm.hmc
-    userid = cfg.CONF.dpm.hmc_username
-    password = cfg.CONF.dpm.hmc_password
-    cpc_name = cfg.CONF.dpm.cpc_name
+    hmc = CONF.dpm.hmc
+    userid = CONF.dpm.hmc_username
+    password = CONF.dpm.hmc_password
+    cpc_name = CONF.dpm.cpc_name
 
     session = zhmcclient.Session(hmc, userid, password)
     client = zhmcclient.Client(session)
@@ -277,11 +319,11 @@ def main():
     physnet_vswitch_map = _get_physnet_vswitch_map(cpc)
     manager = DPMManager(physnet_vswitch_map, cpc)
 
-    polling_interval = cfg.CONF.AGENT.polling_interval
-    quitting_rpc_timeout = cfg.CONF.AGENT.quitting_rpc_timeout
+    polling_interval = CONF.AGENT.polling_interval
+    quitting_rpc_timeout = CONF.AGENT.quitting_rpc_timeout
     agent = ca.CommonAgentLoop(manager, polling_interval,
                                quitting_rpc_timeout,
                                AGENT_TYPE_DPM,
                                DPM_AGENT_BINARY)
     LOG.info(_LI("Agent initialized successfully, now running... "))
-    service.launch(cfg.CONF, agent).wait()
+    service.launch(CONF, agent).wait()

@@ -19,13 +19,28 @@ import sys
 import mock
 from oslo_config import cfg
 from oslo_utils import uuidutils
-from zhmcclient._exceptions import HTTPError
+from zhmcclient import HTTPError
 
 from networking_dpm.ml2 import dpm_neutron_agent as dpm_agt
 from networking_dpm.tests.unit import fake_zhmcclient
 
 from neutron.common import topics
 from neutron.tests import base
+
+
+class TestPhysnetMapping(base.BaseTestCase):
+    def test_get_all_vswitch_ids(self):
+        mapping = dpm_agt.PhysicalNetworkMapping()
+        vswitch1 = fake_zhmcclient._VSwitch({'object-id': 'id1'})
+        vswitch2 = fake_zhmcclient._VSwitch({'object-id': 'id2'})
+        vswitch3 = fake_zhmcclient._VSwitch({'object-id': 'id3'})
+        mapping.add_vswitch('physnet1', vswitch1)
+        mapping.add_vswitch('physnet1', vswitch2)
+        mapping.add_vswitch('physnet2', vswitch3)
+        self.assertItemsEqual([vswitch1, vswitch2, vswitch3],
+                              mapping.get_all_vswitches())
+        expected = {'physnet1': ['id1', 'id2'], 'physnet2': ['id3']}
+        self.assertEqual(expected, mapping.get_mapping())
 
 
 class TestDPMRPCCallbacks(base.BaseTestCase):
@@ -46,7 +61,7 @@ class TestDPMRPCCallbacks(base.BaseTestCase):
 class TestDPMManager(base.BaseTestCase):
     def setUp(self):
         super(TestDPMManager, self).setUp()
-        self.mgr = dpm_agt.DPMManager('mappings', 'cpc')
+        self.mgr = dpm_agt.DPMManager(dpm_agt.PhysicalNetworkMapping(), 'cpc')
 
     def test_ensure_port_admin_state_up(self):
         pass
@@ -92,8 +107,6 @@ class TestDPMManager(base.BaseTestCase):
              'description': ''})))
 
     def test_get_all_devices(self):
-        mapping = {'physnet1': ['vswitch-uuid-1'],
-                   'physnet2': ['vswitch-uuid-2', 'vswitch-uuid-3']}
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
             {"backing-adapter-uri": "/api/adapters/uuid-1",
              "object-id": "vswitch-uuid-1",
@@ -111,13 +124,20 @@ class TestDPMManager(base.BaseTestCase):
              "port": 1,
              "nics": [{"name": "not-configured"}]},
         ]}]}
-        self.mgr.cpc = fake_zhmcclient.get_cpc(hmc)
-        self.mgr.physnet_adapter_map = mapping
-        expected = ['port-id-1', 'port-id-2', 'port-id-3']
+
+        cpc = fake_zhmcclient.get_cpc(hmc)
+        mapping = dpm_agt.PhysicalNetworkMapping()
+        mapping.add_vswitch('physnet1', cpc.vswitches._get('vswitch-uuid-1'))
+        mapping.add_vswitch('physnet1', cpc.vswitches._get('vswitch-uuid-2'))
+        mapping.add_vswitch('physnet2', cpc.vswitches._get('vswitch-uuid-3'))
+
+        self.mgr.cpc = cpc
+        self.mgr.physnet_map = mapping
         with mock.patch.object(self.mgr, '_managed_by_agent',
                                return_value=True) as is_uuid:
             devices = self.mgr.get_all_devices()
             self.assertEqual(3, is_uuid.call_count)
+        expected = ['port-id-1', 'port-id-2', 'port-id-3']
         self.assertItemsEqual(expected, devices)
 
     def test_get_all_devices_deleted_concurrently(self):
@@ -127,17 +147,43 @@ class TestDPMManager(base.BaseTestCase):
              "port": 0,
              "nics": [{"name": "port-id-1"}]},
         ]}]}
-        mapping = {'physnet1': ['vswitch-uuid-1']}
+        cpc = fake_zhmcclient.get_cpc(hmc)
+        mapping = dpm_agt.PhysicalNetworkMapping()
+        mapping.add_vswitch('physnet1', cpc.vswitches._get('vswitch-uuid-1'))
 
-        self.mgr.cpc = fake_zhmcclient.get_cpc(hmc)
-        self.mgr.physnet_adapter_map = mapping
+        self.mgr.cpc = cpc
+        self.mgr.physnet_map = mapping
         with mock.patch.object(fake_zhmcclient._NIC, 'get_property',
                                side_effect=HTTPError(mock.Mock())):
             devices = self.mgr.get_all_devices()
             self.assertEqual(0, len(devices))
 
+    @mock.patch.object(sys, 'exit')
+    def test_get_all_devices_vswitch_failed(self, m_exit):
+        hmc = {"cpcs": [{"object-id": "cpcpid"}]}
+
+        self.mgr.cpc = fake_zhmcclient.get_cpc(hmc)
+        vswitch = mock.Mock()
+        self.mgr.physnet_map._vswitches = [vswitch]
+        with mock.patch.object(vswitch, 'get_connected_nics',
+                               side_effect=HTTPError(mock.Mock())):
+            self.mgr.get_all_devices()
+            m_exit.assert_called_with(1)
+
     def test_get_agent_configurations(self):
-        expected = {'adapter_mappings': 'mappings'}
+        mapping = dpm_agt.PhysicalNetworkMapping()
+        vswitch1 = fake_zhmcclient._VSwitch({'object-id': 'id1'})
+        vswitch2 = fake_zhmcclient._VSwitch({'object-id': 'id2'})
+        vswitch3 = fake_zhmcclient._VSwitch({'object-id': 'id3'})
+        mapping.add_vswitch('physnet1', vswitch1)
+        mapping.add_vswitch('physnet1', vswitch2)
+        mapping.add_vswitch('physnet2', vswitch3)
+        self.assertItemsEqual([vswitch1, vswitch2, vswitch3],
+                              mapping.get_all_vswitches())
+
+        self.mgr.physnet_map = mapping
+        expected = {'adapter_mappings':
+                    {'physnet1': ['id1', 'id2'], 'physnet2': ['id3']}}
         self.assertEqual(expected, self.mgr.get_agent_configurations())
 
     def test_get_agent_id(self):
@@ -174,17 +220,17 @@ class TestDPMMain(base.BaseTestCase):
             cfg.CONF.set_override('firewall_driver', driver, 'SECURITYGROUP')
             dpm_agt._validate_firewall_driver()
 
-    def test__validate_firewall_driver_invalid(self):
+    @mock.patch.object(sys, 'exit')
+    def test__validate_firewall_driver_invalid(self, mock_exit):
         cfg.CONF.set_override('firewall_driver', 'foo', 'SECURITYGROUP')
-        with mock.patch.object(sys, 'exit')as mock_exit:
-            dpm_agt._validate_firewall_driver()
-            mock_exit.assert_called_with(1)
+        dpm_agt._validate_firewall_driver()
+        mock_exit.assert_called_with(1)
 
     def test__get_physnet_vswitch_map(self):
-        mapping = {'physnet1': {'uuid-1': None},
-                   'physnet2': {'uuid-2': 1},
-                   'physnet3': {'uuid-3': 0}}
-        cfg.CONF.set_override('physical_adapter_mappings', mapping,
+        conf_mapping = {'physnet1': {'uuid-1': None},
+                        'physnet2': {'uuid-2': 1},
+                        'physnet3': {'uuid-3': 0}}
+        cfg.CONF.set_override('physical_adapter_mappings', conf_mapping,
                               group='dpm')
         expected = {'physnet1': ['vswitch-uuid-1'],
                     'physnet2': ['vswitch-uuid-2'],
@@ -201,38 +247,38 @@ class TestDPMMain(base.BaseTestCase):
              "port": 0}
         ]}]}
         cpc = fake_zhmcclient.get_cpc(hmc)
-        actual = dpm_agt._get_physnet_vswitch_map(cpc)
+        actual = dpm_agt._get_physnet_vswitch_map(cpc).get_mapping()
 
         # Cannot use assertDictEqual as order of list is not guaranteed
         self.assertItemsEqual(expected['physnet1'], actual['physnet1'])
         self.assertItemsEqual(expected['physnet2'], actual['physnet2'])
         self.assertItemsEqual(expected['physnet3'], actual['physnet3'])
 
-    def test__get_physnet_vswitch_map_adapter_not_found(self):
+    @mock.patch.object(sys, 'exit')
+    def test__get_physnet_vswitch_map_adapter_not_found(self, m_exit):
         mapping = {'physnet1': {'not-found': None}}
         cfg.CONF.set_override('physical_adapter_mappings', mapping,
                               group='dpm')
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": []}]}
         cpc = fake_zhmcclient.get_cpc(hmc)
-        with mock.patch.object(sys, 'exit') as m_sys:
-            dpm_agt._get_physnet_vswitch_map(cpc)
-            m_sys.assert_called_with(1)
+        dpm_agt._get_physnet_vswitch_map(cpc)
+        m_exit.assert_called_with(1)
 
-    def test__get_physnet_vswitch_map_empty(self):
+    @mock.patch.object(sys, 'exit')
+    def test__get_physnet_vswitch_map_empty(self, m_exit):
         mapping = {}
         cfg.CONF.set_override('physical_adapter_mappings', mapping,
                               group='dpm')
-        with mock.patch.object(sys, 'exit') as m_sys:
-            dpm_agt._get_physnet_vswitch_map(mock.Mock())
-            m_sys.assert_called_with(1)
+        dpm_agt._get_physnet_vswitch_map(mock.Mock())
+        m_exit.assert_called_with(1)
 
-    def test__get_physnet_vswitch_map_multiple_adapters(self):
+    @mock.patch.object(sys, 'exit')
+    def test__get_physnet_vswitch_map_multiple_adapters(self, m_exit):
         mapping = {'physnet1': {'uuid-1': None, 'uuid-3': 0}}
         cfg.CONF.set_override('physical_adapter_mappings', mapping,
                               group='dpm')
-        with mock.patch.object(sys, 'exit') as m_sys:
-            dpm_agt._get_physnet_vswitch_map(mock.Mock())
-            m_sys.assert_called_with(1)
+        dpm_agt._get_physnet_vswitch_map(mock.Mock())
+        m_exit.assert_called_with(1)
 
     def test__get_cpc_found(self):
         hmc = {"cpcs": [{"name": "EURANSE2"}]}
