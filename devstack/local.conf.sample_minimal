@@ -9,16 +9,14 @@ LOGFILE=$DEST/logs/stack.sh.log
 SCREEN_LOGDIR=$DEST/logs/screen
 
 
-enable_plugin networking-dpm http://git.openstack.org/openstack/networking-dpm
-
-# Keystone
+# The minimal services to get Neutron running
 ENABLED_SERVICES=key
-# Neutron
 ENABLED_SERVICES+=,q-svc,q-agt
-Q_AGENT=dpm
-# Additional services
 ENABLED_SERVICES+=,rabbit,mysql
 
+# Configure Neutron DPM Agent
+enable_plugin networking-dpm http://git.openstack.org/openstack/networking-dpm
+Q_AGENT=dpm
 
 [[post-config|/$Q_PLUGIN_CONF_FILE]]
 [dpm]
@@ -26,4 +24,4 @@ hmc = <hmc-ip>
 hmc_username = <hmc-user>
 hmc_password = <hmc-password>
 cpc_name = <cpc-name>
-physical_adapter_mappings = "<physcial-network>:<adapter-id>:<port-element-id>"
+physical_adapter_mappings = "public:<adapter-id>:<port-element-id>"
