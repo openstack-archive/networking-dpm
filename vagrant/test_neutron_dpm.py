@@ -60,6 +60,19 @@ regex = re.search('public:(.{36}):([01]?)', adapter_mappings)
 adapter_id = regex.group(1)
 port_element_id = int(regex.group(2) or 0)
 
+
+# Parse neutron.conf
+plugin_conf = ConfigParser.ConfigParser()
+plugin_conf.read("/etc/neutron/neutron.conf")
+
+# Set host to cfg.CONF.DEFAULT.host if possible, default to hostname
+host = None
+try:
+    host = plugin_conf.get('DEFAULT', 'host')
+except ConfigParser.NoOptionError:
+    host = gethostname()
+
+
 # DPM Authentication
 requests.packages.urllib3.disable_warnings()
 session = zhmcclient.Session(zhmc, userid, password)
@@ -86,7 +99,11 @@ vswitch_uri = vswitch.get_property('object-uri')
 
 # Create OpenStack Port
 networks = neutron.list_networks(name='private')
-net_id = networks['networks'][0]['id']
+net = networks['networks'][0]
+net_id = net['id']
+prov_net_type = net['provider:network_type']
+vlan_id = net['provider:segmentation_id']
+
 body = {"port": {"network_id": net_id,
                  "binding:host_id": "vagrant-ubuntu-trusty-64"}}
 port = neutron.create_port(body=body)
@@ -116,7 +133,7 @@ print("DPM partition created %s" % str(partition))
 nic = partition.nics.create({"virtual-switch-uri": vswitch_uri,
                              "name": "OpenStack foo",
                              "description": "OpenStack mac=" + mac + " Host"
-                                            + gethostname()})
+                                            + host})
 print("DPM NIC created %s" % str(nic))
 
 # sleeping to give the agent time to do the work
@@ -127,14 +144,21 @@ def get_neutron_port(port_id):
     ports = neutron.list_ports(id=port_id)
     return ports['ports'][0]
 
+port = get_neutron_port(port_id)
+
+print(port)
 # Do assertions
 assert("ACTIVE" == get_neutron_port(port_id)['status'])
 print("Neutron port status changed to 'ACTIVE'")
-assert("dpm_vswitch" == get_neutron_port(port_id)['binding:vif_type'])
+assert("dpm_vswitch" == port['binding:vif_type'])
 print("Neutron port vif type set to 'dpm_vswitch'")
-assert(vswitch_id ==
-       get_neutron_port(port_id)['binding:vif_details']['vswitch_id'])
-print("Neutron port vif details vswitch_id set to " + vswitch_id)
+assert(vswitch_id == port['binding:vif_details']['object_id'])
+print("Neutron port vif details object_id set to " + vswitch_id)
+if prov_net_type == 'vlan':
+    assert(vlan_id == port['binding:vif_details']['vlan'])
+    print("VLAN ID set to " + str(vlan_id))
+    assert('inband' == port['binding:vif_details']['vlan_mode'])
+    print("vlan_mode set to 'inband'")
 
 # Remove NIC from partition again
 print("Removing DPM NIC again")
