@@ -72,9 +72,9 @@ class DPMMechanismFlatTestCase(DPMMechanismBaseTestCase,
                                        vnic_type=self.VNIC_TYPE)
         self.driver.bind_port(context)
         vif_details = context._bound_vif_details
-        self.assertIsNone(vif_details.get(portbindings.VIF_DETAILS_VLAN))
+        self.assertIsNone(vif_details.get('vlan'))
         self.assertEqual("fake_vswitch1",
-                         vif_details.get(mech_dpm.VIF_DETAILS_OBJECT_ID))
+                         vif_details.get('object_id'))
 
     def test_no_vswitch_ids(self):
 
@@ -99,9 +99,9 @@ class DPMMechanismVlanTestCase(DPMMechanismBaseTestCase,
 
         self.assertEqual(1234, vif_details.get(portbindings.VIF_DETAILS_VLAN))
         self.assertEqual("fake_vswitch1",
-                         vif_details.get(mech_dpm.VIF_DETAILS_OBJECT_ID))
+                         vif_details.get('object_id'))
         self.assertEqual("inband",
-                         vif_details.get(mech_dpm.VLAN_MODE))
+                         vif_details.get('vlan_mode'))
 
     def test_no_vswitch_ids(self):
         context = base.FakePortContext(self.AGENT_TYPE,

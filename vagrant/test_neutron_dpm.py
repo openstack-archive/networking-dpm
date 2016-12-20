@@ -133,8 +133,8 @@ print("Neutron port status changed to 'ACTIVE'")
 assert("dpm_vswitch" == get_neutron_port(port_id)['binding:vif_type'])
 print("Neutron port vif type set to 'dpm_vswitch'")
 assert(vswitch_id ==
-       get_neutron_port(port_id)['binding:vif_details']['vswitch_id'])
-print("Neutron port vif details vswitch_id set to " + vswitch_id)
+       get_neutron_port(port_id)['binding:vif_details']['object_id'])
+print("Neutron port vif details object_id set to " + vswitch_id)
 
 # Remove NIC from partition again
 print("Removing DPM NIC again")
