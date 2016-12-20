@@ -27,7 +27,7 @@ LOG = log.getLogger(__name__)
 AGENT_TYPE_DPM = 'DPM agent'
 VIF_TYPE_DPM_VSWITCH = 'dpm_vswitch'
 VIF_TYPE_DPM_ADAPTER = 'dpm_adapter'
-VIF_DETAILS_OBJECT_ID = 'vswitch_id'
+VIF_DETAILS_OBJECT_ID = 'object_id'
 VLAN_MODE = 'vlan_mode'
 VLAN_MODE_INBAND = 'inband'
 
