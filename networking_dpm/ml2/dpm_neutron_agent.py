@@ -253,6 +253,13 @@ class DPMManager(amb.CommonAgentManagerBase):
             LOG.debug("NIC %(nic)s not managed by this host %(host)s. "
                       "Skipping.", {'nic': nic, 'host': CONF.host})
             return False
+
+        # check if mac is present
+        if not DPMManager._extract_mac(nic):
+            LOG.debug("Description of NIC %s does not contain a valid mac "
+                      "address. Therefore it seems not to be managed by this"
+                      "Neutron agent. Skipping!", nic)
+            return False
         return True
 
     @staticmethod
