@@ -254,6 +254,23 @@ class TestDPMManager(base.BaseTestCase):
                     '00:00:00:00:00:33']
         self.assertItemsEqual(expected, devices)
 
+    def test_get_all_devices_mac_not_present(self):
+        hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
+            {"backing-adapter-uri": "/api/adapters/uuid-1",
+             "object-id": "vswitch-uuid-1",
+             "port": 0,
+             "nics": [{"description": "foo"}]},
+        ]}]}
+
+        cpc = self.mgr.cpc = fake_zhmcclient.get_cpc(hmc)
+
+        self.mgr.vswitches = [cpc.vswitches._get('vswitch-uuid-1')]
+        with mock.patch.object(self.mgr, '_managed_by_agent',
+                               return_value=True):
+            devices = self.mgr.get_all_devices()
+        expected = []
+        self.assertItemsEqual(expected, devices)
+
     def test_get_all_devices_deleted_concurrently(self):
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
             {"backing-adapter-uri": "/api/adapters/uuid-1",
