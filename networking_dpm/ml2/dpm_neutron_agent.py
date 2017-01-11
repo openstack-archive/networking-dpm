@@ -278,7 +278,13 @@ class DPMManager(amb.CommonAgentManagerBase):
                         # Nova stores the Neutron Port ID in the NICs name
                         # field
                         if self._managed_by_agent(nic):
-                            devices.add(self._extract_mac(nic))
+                            mac = self._extract_mac(nic)
+                            if mac:
+                                devices.add(mac)
+                            else:
+                                LOG.debug("Description of NIC %(nic) does "
+                                          "not contain a valid mac address. "
+                                          "Skipping!")
                     except zhmcclient.HTTPError:
                         LOG.debug("NIC %s got deleted concurrently."
                                   "Continuing...", nic)
