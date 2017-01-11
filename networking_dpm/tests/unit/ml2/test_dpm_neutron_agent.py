@@ -197,25 +197,31 @@ class TestDPMManager(base.BaseTestCase):
 
     def test__managed_by_agent(self):
         cfg.CONF.set_override('host', 'foo-host')
-        # Host part of description
+        valid_mac_str = "mac=00:11:22:33:44:55:66"
+        # Host and mac part of description
         self.assertTrue(self.mgr._managed_by_agent(fake_zhmcclient._NIC(
-            {'description': 'OpenStackcontains-foo-host-in-description'})))
+            {'description': 'OpenStackcontains-foo-host-in-description' +
+                            valid_mac_str})))
 
         # Unicode
         self.assertTrue(self.mgr._managed_by_agent(fake_zhmcclient._NIC(
-            {'description': u"OpenStack foo-host"})))
+            {'description': u"OpenStack foo-host mac=00:11:22:33:44:55:66"})))
 
         # host missing
         self.assertFalse(self.mgr._managed_by_agent(fake_zhmcclient._NIC(
-            {'description': 'OpenStacknot-managed'})))
+            {'description': 'OpenStacknot-managed' + valid_mac_str})))
 
-        # Exact match but prefix missing
+        # mac missing
         self.assertFalse(self.mgr._managed_by_agent(fake_zhmcclient._NIC(
-            {'description': 'foo-host'})))
+            {'description': 'OpenStack foo-host'})))
 
-        # No match
+        # prefix missing
         self.assertFalse(self.mgr._managed_by_agent(fake_zhmcclient._NIC(
-            {'description': 'not-managed'})))
+            {'description': 'foo-host' + valid_mac_str})))
+
+        # No host match
+        self.assertFalse(self.mgr._managed_by_agent(fake_zhmcclient._NIC(
+            {'description': 'not-managed' + valid_mac_str})))
 
         # No description
         self.assertFalse(self.mgr._managed_by_agent(fake_zhmcclient._NIC(
@@ -252,6 +258,21 @@ class TestDPMManager(base.BaseTestCase):
             self.assertEqual(3, is_uuid.call_count)
         expected = ['00:00:00:00:00:11', '00:00:00:00:00:22',
                     '00:00:00:00:00:33']
+        self.assertItemsEqual(expected, devices)
+
+    def test_get_all_devices_mac_not_present(self):
+        hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
+            {"backing-adapter-uri": "/api/adapters/uuid-1",
+             "object-id": "vswitch-uuid-1",
+             "port": 0,
+             "nics": [{"description": "OpenStack foo"}]},
+        ]}]}
+
+        cpc = self.mgr.cpc = fake_zhmcclient.get_cpc(hmc)
+
+        self.mgr.vswitches = [cpc.vswitches._get('vswitch-uuid-1')]
+        devices = self.mgr.get_all_devices()
+        expected = []
         self.assertItemsEqual(expected, devices)
 
     def test_get_all_devices_deleted_concurrently(self):
