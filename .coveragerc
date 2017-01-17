@@ -1,6 +1,7 @@
 [run]
 branch = True
 source = networking_dpm
+omit = networking_dpm/tests/*
 
 [report]
 ignore_errors = True
