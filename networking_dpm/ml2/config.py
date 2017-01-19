@@ -14,22 +14,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from os_dpm.config import config as os_dpm_conf
 from oslo_config import cfg
 
 from neutron._i18n import _
 
+os_dpm_conf.register_opts()
 
 # TODO(andreas_s): Neutron does not make use of required=True, therefore
 # the Neutron test base class tests fail when enabled
 mapping_example = "physnet1:adapter-uuid:0"
 dpm_opts = [
-    cfg.StrOpt('hmc',
-               help=_("Hostname or IP address for connection to HMC via "
-                      "zhmcclient")),
-    cfg.StrOpt('hmc_username',
-               help=_("User name for connection to HMC Host.")),
-    cfg.StrOpt('hmc_password',
-               help=_("Password for connection to HMC Host.")),
     cfg.StrOpt('cpc_name',
                help=_("CPC name on which the host is carved out from")),
     cfg.MultiStrOpt('physical_adapter_mappings',
@@ -52,12 +47,10 @@ listed in ml2.network_vlan_ranges on the neutron server should have a
 mapping in each Neutron DPM agents configuration."""))
 ]
 
-dpm_group = cfg.OptGroup(name="dpm", title="DPM Configuration")
-
-cfg.CONF.register_opts(dpm_opts, dpm_group)
+cfg.CONF.register_opts(dpm_opts, os_dpm_conf.DPM_GROUP)
 
 
 def list_opts():
     return [
-        (dpm_group.name, dpm_opts),
+        (os_dpm_conf.DPM_GROUP.name, dpm_opts + os_dpm_conf.COMMON_DPM_OPTS),
     ]
