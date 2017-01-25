@@ -21,7 +21,7 @@ from neutron._i18n import _
 
 # TODO(andreas_s): Neutron does not make use of required=True, therefore
 # the Neutron test base class tests fail when enabled
-mapping_example = "physnet1:adapter-uuid:0"
+mapping_example = ["physnet1:adapter-uuid1:0", "physnet2:adapter-uuid2"]
 dpm_opts = [
     cfg.StrOpt('hmc',
                help=_("Hostname or IP address for connection to HMC via "
