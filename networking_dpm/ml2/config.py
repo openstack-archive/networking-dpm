@@ -35,21 +35,35 @@ dpm_opts = [
     cfg.MultiStrOpt('physical_adapter_mappings',
                     sample_default=mapping_example,
                     help=_("""
-String consisting of the following 3 elements:
-"<physical_network>:<adapter-uuid>[:<port-element-id>]".
-The <port-element-id> is optional and defaults to 0.
+The OpenStack physical networks that can be used by this OpenStack hypervisor
+host, and their backing network adapters and ports in the target CPC.
 
-This is a Multiline Option. Multiple instances can be defined
+This is a multi-line option. Each instance (line) of the option defines one
+physical network for use by this OpenStack hypervisor host, and the network
+adapter and port that is used for that physical network, using this syntax:
 
-physical_adapter_mappings = physnet1:adapter-uuid1
-physical_adapter_mappings = physnet2:adapter-uuid2:1
-physical_adapter_mappings = physnet3:adapter-uuid3:0
+    <physical-network-name>:<adapter-id>[:<port-id>]
 
-This configuration tells the Neutron DPM agent which physical network is
-accessible via which network adapters/ports. Only one adapter/port combination
-can be defined per physical network. All physical networks
-listed in ml2.network_vlan_ranges on the neutron server should have a
-mapping in each Neutron DPM agents configuration."""))
+* <physical-network-name> is the name of the OpenStack physical network.
+* <adapter-id> is the object-id of the network adapter in the target CPC
+  that is used for this physical network.
+* <port-id> is the element-id of the port on that network adapter. It is
+  optional and defaults to 0.
+
+The instances (lines) of this option for a particular Neutron agent
+
+* must not specify the same physical network more than once, and
+* should specify all physical networks listed in the ml2.network_vlan_ranges
+  config option of the Neutron server.
+
+Example:
+
+    physical_adapter_mappings = physnet1:adapter-id-1
+    physical_adapter_mappings = physnet2:adapter-id-2:1
+    physical_adapter_mappings = physnet3:adapter-id-3:0
+"""))
+
+
 ]
 
 dpm_group = cfg.OptGroup(name="dpm", title="DPM Configuration")
