@@ -19,9 +19,12 @@ from oslo_config import cfg
 from neutron._i18n import _
 
 
+mapping_example = ["physnet1:12345678-1234-1234-1234-123456789a",
+                   "physnet2:12345678-1234-1234-1234-123456789b:1",
+                   "physnet3:12345678-1234-1234-1234-123456789c:0"]
+
 # TODO(andreas_s): Neutron does not make use of required=True, therefore
 # the Neutron test base class tests fail when enabled
-mapping_example = "physnet1:12345678-1234-1234-1234-1234567890:0"
 dpm_opts = [
     cfg.StrOpt('hmc',
                help=_("Hostname or IP address for connection to HMC via "
@@ -49,8 +52,8 @@ adapter and port that is used for that physical network, using this syntax:
 * `<physical-network-name>` is the name of the OpenStack physical network.
 * `<adapter-object-id>` is the object-id of the network adapter in the target
   CPC that is used for this physical network.
-* `<port-element-id>` is the element-id of the port on that network adapter. It
-  is optional and defaults to 0.
+* `<port-element-id>` is the element-id of the port on that network adapter.
+  It is optional and defaults to 0.
 
 The instances (lines) of this option for a particular Neutron agent
 
@@ -61,14 +64,6 @@ The instances (lines) of this option for a particular Neutron agent
 * must have all of their physical networks specified in the
   corresponding `*mappings` config option of the Neutron L2 agent service
   on all network nodes.
-
-Example:
-
-```
-    physical_adapter_mappings = physnet1:12345678-1234-1234-1234-123456789a
-    physical_adapter_mappings = physnet2:12345678-1234-1234-1234-123456789b:1
-    physical_adapter_mappings = physnet3:12345678-1234-1234-1234-123456789c:0
-```
 """))
 
 
