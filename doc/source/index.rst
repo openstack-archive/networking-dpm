@@ -12,4 +12,5 @@ Contents:
    installation
    usage
    contributing
+   sample_config
    specs/index
