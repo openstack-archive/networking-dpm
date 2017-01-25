@@ -27,7 +27,11 @@ extensions = [
     'sphinxcontrib.blockdiag',
     'sphinxcontrib.seqdiag',
     'oslosphinx',
+    'oslo_config.sphinxconfiggen'
 ]
+
+config_generator_config_file = '../../etc/neutron/neutron-dpm-agent-config-generator.conf'
+sample_config_basename = '_static/neutron_dpm_agent'
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
