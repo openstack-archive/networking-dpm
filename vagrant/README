@@ -27,7 +27,7 @@ hmc = <hmc-ip>
 hmc_username = <hmc-user>
 hmc_password = <hmc-password>
 cpc_name = <cpc-name>
-physical_adapter_mappings = public:<dpm-adapter-uuid>:<dpm-adapter-port-element-id>
+physical_adapter_mappings = public:<adapter-object-id>:<port-element-id>
 
 Start devstack
 --------------
