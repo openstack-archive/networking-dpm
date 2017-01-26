@@ -17,6 +17,7 @@
 from oslo_config import cfg
 
 from neutron._i18n import _
+from neutron.conf.plugins.ml2.drivers.agent import agent_opts
 
 
 mapping_example = ["physnet1:12345678-1234-1234-1234-123456789a",
@@ -77,5 +78,5 @@ cfg.CONF.register_opts(dpm_opts, dpm_group)
 
 def list_opts():
     return [
-        (dpm_group.name, dpm_opts),
+        (dpm_group.name, dpm_opts), ("AGENT", agent_opts)
     ]
