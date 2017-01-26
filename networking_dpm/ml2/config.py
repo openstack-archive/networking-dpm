@@ -20,6 +20,14 @@ from oslo_config import cfg
 from neutron._i18n import _
 from neutron.conf.plugins.ml2.drivers.agent import agent_opts
 
+# Update help text of DPM group with networking-dpm specifics
+os_dpm_conf.DPM_GROUP.help += """
+
+DPM config options for the Neutron agent on the compute node (one agent
+instance for each OpenStack hypervisor host) specify the target CPC, the HMC
+managing it, and the OpenStack physical networks for the OpenStack hypervisor
+host and their backing network adapters and ports in the target CPC."""
+
 os_dpm_conf.register_opts()
 
 mapping_example = ["physnet1:12345678-1234-1234-1234-123456789a",
