@@ -60,10 +60,11 @@ The instances (lines) of this option for a particular Neutron agent
 * must not specify the same physical network more than once, and
 * must not specify the same adapter and port more than once, and
 * must have all of their physical networks specified in the
-  `ml2.network_vlan_ranges` config option of the Neutron server, and
-* must have all of their physical networks specified in the
   corresponding `*mappings` config option of the Neutron L2 agent service
-  on all network nodes.
+  on all network nodes, and
+* must have all of their physical networks specified in the
+  `ml2.network_vlan_ranges` config option of the Neutron server, if vlan
+  self service networks are used.
 """))
 
 
