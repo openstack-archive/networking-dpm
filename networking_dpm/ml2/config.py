@@ -19,6 +19,14 @@ from oslo_config import cfg
 
 from neutron._i18n import _
 
+# Update help text of DPM group with networking-dpm specifics
+os_dpm_conf.DPM_GROUP.help += """
+
+DPM config options for the Neutron agent on the compute node (one agent
+instance for each OpenStack hypervisor host) specify the target CPC, the HMC
+managing it, and the OpenStack physical networks for the OpenStack hypervisor
+host and their backing network adapters and ports in the target CPC."""
+
 os_dpm_conf.register_opts()
 
 # TODO(andreas_s): Neutron does not make use of required=True, therefore
