@@ -17,8 +17,6 @@
 from os_dpm.config import config as os_dpm_conf
 from oslo_config import cfg
 
-from neutron.conf.plugins.ml2.drivers.agent import agent_opts
-
 # Update help text of DPM group with networking-dpm specifics
 os_dpm_conf.DPM_GROUP.help += """
 
@@ -79,5 +77,4 @@ cfg.CONF.register_opts(dpm_opts, os_dpm_conf.DPM_GROUP)
 def list_opts():
     return [
         (os_dpm_conf.DPM_GROUP, dpm_opts + os_dpm_conf.COMMON_DPM_OPTS),
-        ("AGENT", agent_opts),
     ]
