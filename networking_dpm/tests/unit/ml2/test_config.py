@@ -42,7 +42,7 @@ class TestConfig(base.BaseTestCase):
         expected = os_dpm_conf.COMMON_DPM_OPTS + config.dpm_opts
         # Result is a list of tuples (one tuple per config group)
         result = config.list_opts()
-        self.assertEqual(2, len(result))
+        self.assertEqual(1, len(result))
 
         # DPM Config options
         dpm_tuple = result[0]
@@ -50,7 +50,3 @@ class TestConfig(base.BaseTestCase):
         self.assertEqual(os_dpm_conf.DPM_GROUP, dpm_tuple[0])
         config_opts = dpm_tuple[1]
         self.assertItemsEqual(expected, config_opts)
-
-        # Neutron config options
-        neutron_tuple = result[1]
-        self.assertEqual("AGENT", neutron_tuple[0])
