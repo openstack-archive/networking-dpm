@@ -53,7 +53,7 @@ plugin_conf.read("/etc/neutron/plugins/ml2/ml2_conf.ini")
 zhmc = plugin_conf.get('dpm', 'hmc')
 userid = plugin_conf.get('dpm', 'hmc_username')
 password = plugin_conf.get('dpm', 'hmc_password')
-cpc_name = plugin_conf.get('dpm', 'cpc_name')
+cpc_oid = plugin_conf.get('dpm', 'cpc_object_id')
 
 adapter_mappings = plugin_conf.get('dpm', 'physical_adapter_mappings')
 regex = re.search('public:(.{36}):([01]?)', adapter_mappings)
@@ -79,7 +79,7 @@ session = zhmcclient.Session(zhmc, userid, password)
 client = zhmcclient.Client(session)
 
 
-cpc = client.cpcs.find(name=cpc_name)
+cpc = client.cpcs.find(**{"object-id": cpc_oid})
 print("Working on cpc %s" % cpc)
 
 # Cleaning up partitions from previous test runs

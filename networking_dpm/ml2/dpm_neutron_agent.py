@@ -347,14 +347,14 @@ def _validate_firewall_driver():
         sys.exit(1)
 
 
-def _get_cpc(client, cpc_name):
+def _get_cpc(client, cpc_oid):
     try:
-        cpc = client.cpcs.find(name=cpc_name)
+        cpc = client.cpcs.find(**{'object-id': cpc_oid})
         if cpc.dpm_enabled:
             return cpc
-        LOG.error(_LE("CPC %s not in DPM mode.") % cpc_name)
+        LOG.error(_LE("CPC %s not in DPM mode.") % cpc_oid)
     except zhmcclient.NotFound:
-        LOG.error(_LE("Could not find CPC %s") % cpc_name)
+        LOG.error(_LE("Could not find CPC with object-id %s") % cpc_oid)
     sys.exit(1)
 
 
@@ -378,11 +378,11 @@ def main():
     hmc = CONF.dpm.hmc
     userid = CONF.dpm.hmc_username
     password = CONF.dpm.hmc_password
-    cpc_name = CONF.dpm.cpc_name
+    cpc_oid = CONF.dpm.cpc_object_id
 
     session = zhmcclient.Session(hmc, userid, password)
     client = zhmcclient.Client(session)
-    cpc = _get_cpc(client, cpc_name)
+    cpc = _get_cpc(client, cpc_oid)
 
     physnet_vswitch_map = PhysicalNetworkMapping.create_mapping(cpc)
     manager = DPMManager(physnet_vswitch_map.get_mapping(), cpc,
