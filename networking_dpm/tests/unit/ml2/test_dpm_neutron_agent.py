@@ -352,22 +352,32 @@ class TestDPMMain(base.BaseTestCase):
         mock_exit.assert_called_with(1)
 
     def test__get_cpc_found(self):
-        hmc = {"cpcs": [{"name": "foo-se"}]}
+        hmc = {"cpcs": [{"object-id": "oid1"}]}
         client = fake_zhmcclient.get_client(hmc)
-        cpc = dpm_agt._get_cpc(client, 'foo-se')
-        self.assertEqual("foo-se", cpc.get_property("name"))
+        cpc = dpm_agt._get_cpc(client, "oid1")
+        self.assertEqual("oid1", cpc.get_property("object-id"))
 
     def test__get_cpc_not_dpm(self):
-        hmc = {"cpcs": [{"name": "foo-se", "dpm_enabled": False}]}
+        hmc = {"cpcs": [{"object-id": "oid1", "dpm_enabled": False}]}
         client = fake_zhmcclient.get_client(hmc)
 
         with mock.patch.object(sys, 'exit') as m_sys:
-            dpm_agt._get_cpc(client, 'foo-se')
+            dpm_agt._get_cpc(client, 'oid1')
             m_sys.assert_called_with(1)
 
     def test__get_cpc_not_found(self):
-        hmc = {"cpcs": [{"name": "foo"}]}
+        hmc = {"cpcs": [{"object-id": "oid1"}]}
         client = fake_zhmcclient.get_client(hmc)
         with mock.patch.object(sys, 'exit') as m_sys:
-            dpm_agt._get_cpc(client, 'foo-se')
+            dpm_agt._get_cpc(client, 'not-found')
             m_sys.assert_called_with(1)
+
+    @mock.patch.object(dpm_agt.common_config, 'init')
+    @mock.patch.object(dpm_agt, '_get_cpc')
+    @mock.patch.object(dpm_agt.PhysicalNetworkMapping, 'create_mapping')
+    @mock.patch.object(dpm_agt.service, 'launch')
+    def test_main(self, mock_launch, mock_cm, mock_get_cpcp, mock_init):
+        # This test also discovers when config options have changed e.g. in
+        # os-dpm
+        dpm_agt.main()
+        mock_launch.assert_called_once()
