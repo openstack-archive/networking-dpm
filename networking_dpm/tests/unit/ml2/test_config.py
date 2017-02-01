@@ -27,15 +27,13 @@ class TestConfig(base.BaseTestCase):
         cfg.CONF.set_override('hmc', 'hmc-ip', 'dpm')
         cfg.CONF.set_override('hmc_username', 'username', 'dpm')
         cfg.CONF.set_override('hmc_password', 'password', 'dpm')
-        cfg.CONF.set_override('cpc_uuid', 'uuid', 'dpm')
-        cfg.CONF.set_override('cpc_name', 'cpcname', 'dpm')
+        cfg.CONF.set_override('cpc_object_id', 'oid', 'dpm')
         cfg.CONF.set_override('physical_adapter_mappings', 'mapping', 'dpm')
 
         self.assertEqual('hmc-ip', cfg.CONF.dpm.hmc)
         self.assertEqual('username', cfg.CONF.dpm.hmc_username)
         self.assertEqual('password', cfg.CONF.dpm.hmc_password)
-        self.assertEqual('uuid', cfg.CONF.dpm.cpc_uuid)
-        self.assertEqual('cpcname', cfg.CONF.dpm.cpc_name)
+        self.assertEqual('oid', cfg.CONF.dpm.cpc_object_id)
         self.assertEqual('mapping', cfg.CONF.dpm.physical_adapter_mappings)
 
     def test_list_opts(self):
