@@ -34,8 +34,6 @@ mapping_example = ["physnet1:12345678-1234-1234-1234-123456789a",
 # TODO(andreas_s): Neutron does not make use of required=True, therefore
 # the Neutron test base class tests fail when enabled
 dpm_opts = [
-    cfg.StrOpt('cpc_name',
-               help="CPC name on which the host is carved out from"),
     cfg.MultiStrOpt('physical_adapter_mappings',
                     sample_default=mapping_example,
                     help="""
