@@ -15,7 +15,6 @@
 
 from networking_dpm.ml2 import mech_dpm
 
-from neutron.extensions import portbindings
 from neutron.tests.unit.plugins.ml2 import _test_mech_agent as base
 
 
@@ -81,32 +80,6 @@ class DPMMechanismFlatTestCase(DPMMechanismBaseTestCase,
         context = base.FakePortContext(self.AGENT_TYPE,
                                        self.AGENTS_NO_VSWITCH,
                                        segments=self.FLAT_SEGMENTS,
-                                       vnic_type=self.VNIC_TYPE)
-        self.driver.bind_port(context)
-        self._check_unbound(context)
-
-
-class DPMMechanismVlanTestCase(DPMMechanismBaseTestCase,
-                               base.AgentMechanismVlanTestCase):
-
-    def test_type_vlan_vif_details(self):
-        context = base.FakePortContext(self.AGENT_TYPE,
-                                       self.AGENTS,
-                                       self.VLAN_SEGMENTS,
-                                       vnic_type=self.VNIC_TYPE)
-        self.driver.bind_port(context)
-        vif_details = context._bound_vif_details
-
-        self.assertEqual(1234, vif_details.get(portbindings.VIF_DETAILS_VLAN))
-        self.assertEqual("fake_vswitch1",
-                         vif_details.get('object_id'))
-        self.assertEqual("inband",
-                         vif_details.get('vlan_mode'))
-
-    def test_no_vswitch_ids(self):
-        context = base.FakePortContext(self.AGENT_TYPE,
-                                       self.AGENTS_NO_VSWITCH,
-                                       segments=self.VLAN_SEGMENTS,
                                        vnic_type=self.VNIC_TYPE)
         self.driver.bind_port(context)
         self._check_unbound(context)
