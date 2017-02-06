@@ -52,8 +52,8 @@ class TestPhysnetMapping(base.BaseTestCase):
                         "physnet1:uuid2:1",
                         "physnet2:uuid3:1"
                         ]
-        cfg.CONF.set_override('physical_adapter_mappings', test_mapping,
-                              group='dpm')
+        cfg.CONF.set_override('physical_network_adapter_mappings',
+                              test_mapping, group='dpm')
         mapping = dpm_map(mock.Mock())
         self.assertEqual(test_mapping, mapping._get_interface_mapping_conf())
 
@@ -62,8 +62,8 @@ class TestPhysnetMapping(base.BaseTestCase):
                         "physnet2:uuid-2:1",
                         "physnet3:uuid-3:0"
                         ]
-        cfg.CONF.set_override('physical_adapter_mappings', conf_mapping,
-                              group='dpm')
+        cfg.CONF.set_override('physical_network_adapter_mappings',
+                              conf_mapping, group='dpm')
         expected = {'physnet1': ['vswitch-uuid-1'],
                     'physnet2': ['vswitch-uuid-2'],
                     'physnet3': ['vswitch-uuid-3']}
@@ -101,7 +101,7 @@ class TestPhysnetMapping(base.BaseTestCase):
         self.assertIn("vswitch-uuid-3", vswitch_ids)
 
     def test_create_mapping_invalid_adapter_type(self):
-        cfg.CONF.set_override('physical_adapter_mappings',
+        cfg.CONF.set_override('physical_network_adapter_mappings',
                               ["physnet1:uuid-1:"],
                               group='dpm')
         hmc = {"cpcs": [{
@@ -114,8 +114,8 @@ class TestPhysnetMapping(base.BaseTestCase):
 
     def test_create_mapping_adapter_not_exists(self):
         conf_mapping = ['physnet1:not_exists:']
-        cfg.CONF.set_override('physical_adapter_mappings', conf_mapping,
-                              group='dpm')
+        cfg.CONF.set_override('physical_network_adapter_mappings',
+                              conf_mapping, group='dpm')
         hmc = {"cpcs": [{
             "object-id": "cpcpid",
             "adapters": [{'object-id': 'other_adapter', 'type': 'osd'}]}]}
@@ -126,8 +126,8 @@ class TestPhysnetMapping(base.BaseTestCase):
 
     def test_create_mapping_adapter_port_not_exists(self):
         conf_mapping = ['physnet1:uuid-1:1']
-        cfg.CONF.set_override('physical_adapter_mappings', conf_mapping,
-                              group='dpm')
+        cfg.CONF.set_override('physical_network_adapter_mappings',
+                              conf_mapping, group='dpm')
         hmc = {"cpcs": [{
             "object-id": "cpcpid",
             "adapters": [{'object-id': 'uuid-1', 'type': 'osd',
@@ -139,8 +139,8 @@ class TestPhysnetMapping(base.BaseTestCase):
 
     def test_create_mapping_vswitch_not_exists(self):
         conf_mapping = ['physnet1:uuid-1:']
-        cfg.CONF.set_override('physical_adapter_mappings', conf_mapping,
-                              group='dpm')
+        cfg.CONF.set_override('physical_network_adapter_mappings',
+                              conf_mapping, group='dpm')
         hmc = {"cpcs": [{
             "object-id": "cpcpid",
             "adapters": [{'object-id': 'uuid-1', 'type': 'osd'}]}]}
@@ -150,14 +150,15 @@ class TestPhysnetMapping(base.BaseTestCase):
                           dpm_map.create_mapping, cpc)
 
     def test_create_mapping_no_config(self):
-        cfg.CONF.set_override('physical_adapter_mappings', [], group='dpm')
+        cfg.CONF.set_override('physical_network_adapter_mappings', [],
+                              group='dpm')
         self.assertRaises(SystemExit,
                           dpm_map.create_mapping,
                           mock.Mock())
 
     def test_create_mapping_multiple_adapters_per_physnet(self):
         mapping = ['physnet1:uuid-1:', 'physnet1:uuid-3:0']
-        cfg.CONF.set_override('physical_adapter_mappings', mapping,
+        cfg.CONF.set_override('physical_network_adapter_mappings', mapping,
                               group='dpm')
 
         adapters = [{'object-id': 'uuid-1', 'type': 'osd'},

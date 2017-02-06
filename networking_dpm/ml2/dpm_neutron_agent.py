@@ -143,7 +143,7 @@ class PhysicalNetworkMapping(object):
 
     @staticmethod
     def _get_interface_mapping_conf():
-        interface_mappings = CONF.dpm.physical_adapter_mappings
+        interface_mappings = CONF.dpm.physical_network_adapter_mappings
 
         if not interface_mappings:
             LOG.error(_LE("physical_adapter_mappings dpm configuration not "

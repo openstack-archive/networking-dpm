@@ -28,13 +28,15 @@ class TestConfig(base.BaseTestCase):
         cfg.CONF.set_override('hmc_username', 'username', 'dpm')
         cfg.CONF.set_override('hmc_password', 'password', 'dpm')
         cfg.CONF.set_override('cpc_object_id', 'oid', 'dpm')
-        cfg.CONF.set_override('physical_adapter_mappings', 'mapping', 'dpm')
+        cfg.CONF.set_override('physical_network_adapter_mappings', 'mapping',
+                              'dpm')
 
         self.assertEqual('hmc-ip', cfg.CONF.dpm.hmc)
         self.assertEqual('username', cfg.CONF.dpm.hmc_username)
         self.assertEqual('password', cfg.CONF.dpm.hmc_password)
         self.assertEqual('oid', cfg.CONF.dpm.cpc_object_id)
-        self.assertEqual('mapping', cfg.CONF.dpm.physical_adapter_mappings)
+        self.assertEqual('mapping',
+                         cfg.CONF.dpm.physical_network_adapter_mappings)
 
     def test_list_opts(self):
         expected = os_dpm_conf.COMMON_DPM_OPTS + config.dpm_opts

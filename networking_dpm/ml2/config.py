@@ -34,7 +34,7 @@ mapping_example = ["physnet1:12345678-1234-1234-1234-123456789a",
 # TODO(andreas_s): Neutron does not make use of required=True, therefore
 # the Neutron test base class tests fail when enabled
 dpm_opts = [
-    cfg.MultiStrOpt('physical_adapter_mappings',
+    cfg.MultiStrOpt('physical_network_adapter_mappings',
                     sample_default=mapping_example,
                     help="""
 The OpenStack physical networks that can be used by this OpenStack hypervisor
