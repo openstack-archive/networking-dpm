@@ -204,6 +204,7 @@ class DPMManager(amb.CommonAgentManagerBase):
         self.physnet_map = physnet_mapping
         self.vswitches = vswitches
         self.cpc = cpc
+        self.zhmc_connection_ok = True
 
     def ensure_port_admin_state(self, device, admin_state_up):
         # Setting a port up/down is not supported by Neutron DPM agent. Ports
@@ -287,8 +288,20 @@ class DPMManager(amb.CommonAgentManagerBase):
                     except zhmcclient.HTTPError:
                         LOG.debug("NIC %s got deleted concurrently."
                                   "Continuing...", nic)
+                    self.zhmc_connection_ok = True
+            except zhmcclient.ConnectionError as ce:
+                if self.zhmc_connection_ok:
+                    self.zhmc_connection_ok = False
+                    # Only log error if connection was ok before
+                    LOG.error(_LE("%(message)s, %(details)s"),
+                              {"message": ce, "details": ce.details})
+                    LOG.error(_LE("Lost connection to HMC of CPC %(cpc)s "
+                                  "while gathering NICs for vswitch "
+                                  "%(vswitch)s. All NICs of this vswitch and "
+                                  "its corresponding Neutron ports wil be "
+                                  "reported as 'DOWN'."),
+                              {"cpc": self.cpc, "vswitch": vswitch})
             except zhmcclient.HTTPError:
-                # TODO(andreas_s): Check general HMC connectivity first
                 LOG.warning(_LE("Retrieving connected VNICs for DPM vSwitch "
                                 "%(vswitch)s failed. DPM vSwitch object is "
                                 "not available anymore. This can happen if "
