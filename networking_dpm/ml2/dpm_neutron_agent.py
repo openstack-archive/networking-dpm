@@ -274,7 +274,7 @@ class DPMManager(amb.CommonAgentManagerBase):
     def get_all_devices(self):
         """Getting all NICs that are managed by this agent
 
-        :return: List of Neutron port UUID for which NICs exist
+        :return: List of Neutron port MACs for which NICs exist
         """
         devices = set()
 
@@ -282,8 +282,6 @@ class DPMManager(amb.CommonAgentManagerBase):
             try:
                 for nic in vswitch.get_connected_nics():
                     try:
-                        # Nova stores the Neutron Port ID in the NICs name
-                        # field
                         if self._managed_by_agent(nic):
                             devices.add(self._extract_mac(nic))
                     except zhmcclient.HTTPError:
