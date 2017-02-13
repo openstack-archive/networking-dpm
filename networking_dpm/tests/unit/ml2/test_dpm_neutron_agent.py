@@ -18,6 +18,7 @@ import sys
 
 import mock
 from oslo_config import cfg
+from zhmcclient import ConnectionError
 from zhmcclient import HTTPError
 
 from networking_dpm.ml2 import dpm_neutron_agent as dpm_agt
@@ -301,6 +302,27 @@ class TestDPMManager(base.BaseTestCase):
                                side_effect=HTTPError(mock.Mock())):
             self.mgr.get_all_devices()
             m_exit.assert_called_with(1)
+
+    @mock.patch.object(dpm_agt.DPMManager, "_managed_by_agent",
+                       return_value=True)
+    def test_get_all_devices_connection_error(self, mock_mba):
+        nic = mock.Mock()
+        vswitch_good = mock.Mock()
+        vswitch_good.get_connected_nics = lambda: [nic]
+
+        vswitch_bad = mock.Mock()
+        vswitch_bad.get_connected_nics.side_effect = ConnectionError(
+            "foo", details="bar")
+        self.mgr.vswitches = [vswitch_good, vswitch_bad]
+
+        def _extract_mac(nic):
+            return {str(nic): "mac_good"}[str(nic)]
+
+        with mock.patch.object(dpm_agt.DPMManager, "_extract_mac",
+                               side_effect=_extract_mac):
+            devices = self.mgr.get_all_devices()
+        self.assertEqual(1, len(devices))
+        self.assertIn("mac_good", devices)
 
     def test_get_agent_configurations(self):
         self.mgr.physnet_map = 'foo'
