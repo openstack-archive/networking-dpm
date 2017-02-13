@@ -287,8 +287,15 @@ class DPMManager(amb.CommonAgentManagerBase):
                     except zhmcclient.HTTPError:
                         LOG.debug("NIC %s got deleted concurrently."
                                   "Continuing...", nic)
+            except zhmcclient.ConnectionError as ce:
+                LOG.error(_LE("%(message)s, %(details)s"),
+                          {"message": ce, "details": ce.details})
+                LOG.error(_LE("Lost connection to HMC of CPC %(cpc)s while "
+                              "gathering NICs for vswitch %(vswitch)s. "
+                              "All NICs of this vswitch and its corresponding "
+                              "Neutron ports wil be reported as 'DOWN'."),
+                          {"cpc": self.cpc, "vswitch": vswitch})
             except zhmcclient.HTTPError:
-                # TODO(andreas_s): Check general HMC connectivity first
                 LOG.warning(_LE("Retrieving connected VNICs for DPM vSwitch "
                                 "%(vswitch)s failed. DPM vSwitch object is "
                                 "not available anymore. This can happen if "
