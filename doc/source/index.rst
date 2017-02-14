@@ -53,6 +53,7 @@ Using the agent
 
     installation
     configuration
+    hardware_support
 
 Contributing to the project
 ===========================
