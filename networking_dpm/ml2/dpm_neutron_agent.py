@@ -28,6 +28,7 @@ from networking_dpm.ml2.mech_dpm import AGENT_TYPE_DPM
 
 from neutron._i18n import _LE
 from neutron._i18n import _LI
+from neutron._i18n import _LW
 from neutron.api.rpc.handlers import securitygroups_rpc as sg_rpc
 from neutron.common import config as common_config
 from neutron.common import topics
@@ -289,7 +290,7 @@ class DPMManager(amb.CommonAgentManagerBase):
                                   "Continuing...", nic)
             except zhmcclient.HTTPError:
                 # TODO(andreas_s): Check general HMC connectivity first
-                LOG.warning(_LE("Retrieving connected VNICs for DPM vSwitch "
+                LOG.warning(_LW("Retrieving connected VNICs for DPM vSwitch "
                                 "%(vswitch)s failed. DPM vSwitch object is "
                                 "not available anymore. This can happen if "
                                 "the corresponding adapter got removed "
