@@ -24,11 +24,11 @@ from oslo_service import service
 import zhmcclient
 
 from networking_dpm.ml2 import config
+from networking_dpm.ml2 import exceptions
 from networking_dpm.ml2.mech_dpm import AGENT_TYPE_DPM
 
 from neutron._i18n import _LE
 from neutron._i18n import _LI
-from neutron._i18n import _LW
 from neutron.api.rpc.handlers import securitygroups_rpc as sg_rpc
 from neutron.common import config as common_config
 from neutron.common import topics
@@ -290,17 +290,16 @@ class DPMManager(amb.CommonAgentManagerBase):
                                   "Continuing...", nic)
             except zhmcclient.HTTPError:
                 # TODO(andreas_s): Check general HMC connectivity first
-                LOG.warning(_LW("Retrieving connected VNICs for DPM vSwitch "
-                                "%(vswitch)s failed. DPM vSwitch object is "
-                                "not available anymore. This can happen if "
-                                "the corresponding adapter got removed "
-                                "from the system or the corresponding "
-                                "hipersockets network got deleted. Please"
-                                "adjust the physical_adapter_mappings "
-                                "configuration accordingly and start the "
-                                "agent again. Agent terminated!"),
-                            {'vswitch': vswitch})
-                sys.exit(1)
+                raise exceptions.UnrecoverableConfigurationError(
+                    details="Retrieving connected VNICs for DPM vSwitch"
+                            "%(vswitch)s failed. DPM vSwitch object is not "
+                            "available anymore. This can happen if the "
+                            "corresponding adapter got removed from the "
+                            "system or the corresponding hipersockets "
+                            "network got deleted. Please verify "
+                            "the physical_network_adapter_mappings "
+                            "configuration and start the agent again. Agent "
+                            "terminated!" % {'vswitch': vswitch})
         return devices
 
     def get_extension_driver_type(self):
