@@ -23,6 +23,7 @@ from zhmcclient import HTTPError
 from networking_dpm.ml2 import dpm_neutron_agent as dpm_agt
 from networking_dpm.ml2.dpm_neutron_agent import (PhysicalNetworkMapping as
                                                   dpm_map)
+from networking_dpm.ml2 import exceptions
 from networking_dpm.tests.unit import fake_zhmcclient
 
 from neutron.common import topics
@@ -290,8 +291,7 @@ class TestDPMManager(base.BaseTestCase):
             devices = self.mgr.get_all_devices()
             self.assertEqual(0, len(devices))
 
-    @mock.patch.object(sys, 'exit')
-    def test_get_all_devices_vswitch_failed(self, m_exit):
+    def test_get_all_devices_vswitch_failed(self):
         hmc = {"cpcs": [{"object-id": "cpcpid"}]}
 
         self.mgr.cpc = fake_zhmcclient.get_cpc(hmc)
@@ -299,8 +299,8 @@ class TestDPMManager(base.BaseTestCase):
         self.mgr.vswitches = [vswitch]
         with mock.patch.object(vswitch, 'get_connected_nics',
                                side_effect=HTTPError(mock.Mock())):
-            self.mgr.get_all_devices()
-            m_exit.assert_called_with(1)
+            self.assertRaises(exceptions.UnrecoverableConfigurationError,
+                              self.mgr.get_all_devices)
 
     def test_get_agent_configurations(self):
         self.mgr.physnet_map = 'foo'
