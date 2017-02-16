@@ -290,17 +290,26 @@ class TestDPMManager(base.BaseTestCase):
             devices = self.mgr.get_all_devices()
             self.assertEqual(0, len(devices))
 
-    @mock.patch.object(sys, 'exit')
-    def test_get_all_devices_vswitch_failed(self, m_exit):
+    def _test_get_all_devices_vswitch_error(self, error):
         hmc = {"cpcs": [{"object-id": "cpcpid"}]}
 
         self.mgr.cpc = fake_zhmcclient.get_cpc(hmc)
         vswitch = mock.Mock()
         self.mgr.vswitches = [vswitch]
         with mock.patch.object(vswitch, 'get_connected_nics',
-                               side_effect=HTTPError(mock.Mock())):
+                               side_effect=error):
             self.mgr.get_all_devices()
-            m_exit.assert_called_with(1)
+
+    @mock.patch.object(sys, 'exit')
+    def test_get_all_devices_vswitch_http_error_ignore(self, m_exit):
+        self._test_get_all_devices_vswitch_error(HTTPError({}))
+        self.assertFalse(m_exit.called)
+
+    @mock.patch.object(sys, 'exit')
+    def test_get_all_devices_vswitch_http_404(self, m_exit):
+        http_error = HTTPError({'http-status': 404})
+        self._test_get_all_devices_vswitch_error(http_error)
+        m_exit.assert_called_once_with(1)
 
     def test_get_agent_configurations(self):
         self.mgr.physnet_map = 'foo'

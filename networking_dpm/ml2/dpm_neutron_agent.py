@@ -24,6 +24,7 @@ from oslo_service import service
 import zhmcclient
 
 from networking_dpm.ml2 import config
+from networking_dpm.ml2 import constants as const
 from networking_dpm.ml2.mech_dpm import AGENT_TYPE_DPM
 
 from neutron._i18n import _LE
@@ -285,22 +286,39 @@ class DPMManager(amb.CommonAgentManagerBase):
                     try:
                         if self._managed_by_agent(nic):
                             devices.add(self._extract_mac(nic))
-                    except zhmcclient.HTTPError:
-                        LOG.debug("NIC %s got deleted concurrently."
-                                  "Continuing...", nic)
-            except zhmcclient.HTTPError:
+                    except zhmcclient.HTTPError as http_error:
+                        if (http_error.http_status ==
+                                const.HTTP_RESPONSE_STATUS_404):
+                            LOG.debug("NIC %s got deleted concurrently."
+                                      "Continuing...", nic)
+                        else:
+                            LOG.exception(_LE("HTTP error occurred: %s"),
+                                          http_error)
+                            LOG.warning(_LW("NIC %s will be reported as "
+                                        "'DOWN'"), nic)
+            except zhmcclient.HTTPError as http_error:
+                LOG.exception(_LE("HTTP error occurred: %s"), http_error)
                 # TODO(andreas_s): Check general HMC connectivity first
-                LOG.warning(_LW("Retrieving connected VNICs for DPM vSwitch "
-                                "%(vswitch)s failed. DPM vSwitch object is "
-                                "not available anymore. This can happen if "
-                                "the corresponding adapter got removed "
-                                "from the system or the corresponding "
-                                "hipersockets network got deleted. Please"
-                                "adjust the physical_adapter_mappings "
-                                "configuration accordingly and start the "
-                                "agent again. Agent terminated!"),
-                            {'vswitch': vswitch})
-                sys.exit(1)
+                if http_error.http_status == const.HTTP_RESPONSE_STATUS_404:
+                    LOG.error(_LE(
+                        "An unrecoverable error occurred! "
+                        "DPM vSwitch object %(vswitch)s is "
+                        "not available anymore. This can happen if "
+                        "the corresponding adapter got removed "
+                        "from the system or the corresponding "
+                        "hipersockets network got deleted. Please "
+                        "check the physical_network_adapter_mappings "
+                        "configuration and start the "
+                        "agent again. Agent terminated!"),
+                        {'vswitch': vswitch})
+                    # Need to exit with sys.exit, as calling code catches
+                    # exceptions
+                    sys.exit(1)
+
+                LOG.warning(_LW("An error occurred while retrieving the "
+                                "connected nics of vswitch %(vswitch)s."
+                                "All NICs of this vswitch will be reported "
+                                "as 'DOWN'."))
         return devices
 
     def get_extension_driver_type(self):
