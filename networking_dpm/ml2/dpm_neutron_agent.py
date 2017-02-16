@@ -273,6 +273,24 @@ class DPMManager(amb.CommonAgentManagerBase):
             return match.group(1)
         # TODO(andreas_s): throw exception
 
+    def _filter_agent_managed_nic_macs(self, nics):
+        macs = set()
+        for nic in nics:
+            try:
+                if self._managed_by_agent(nic):
+                    macs.add(self._extract_mac(nic))
+            except zhmcclient.HTTPError as http_error:
+                if (http_error.http_status ==
+                        const.HTTP_RESPONSE_STATUS_404):
+                    LOG.debug("NIC %s got deleted concurrently."
+                              "Continuing...", nic)
+                else:
+                    LOG.exception(_LE("HTTP error occurred: %s"),
+                                  http_error)
+                    LOG.warning(_LW("NIC %s will be reported as "
+                                    "'DOWN'"), nic)
+        return macs
+
     def get_all_devices(self):
         """Getting all NICs that are managed by this agent
 
@@ -282,20 +300,9 @@ class DPMManager(amb.CommonAgentManagerBase):
 
         for vswitch in self.vswitches:
             try:
-                for nic in vswitch.get_connected_nics():
-                    try:
-                        if self._managed_by_agent(nic):
-                            devices.add(self._extract_mac(nic))
-                    except zhmcclient.HTTPError as http_error:
-                        if (http_error.http_status ==
-                                const.HTTP_RESPONSE_STATUS_404):
-                            LOG.debug("NIC %s got deleted concurrently."
-                                      "Continuing...", nic)
-                        else:
-                            LOG.exception(_LE("HTTP error occurred: %s"),
-                                          http_error)
-                            LOG.warning(_LW("NIC %s will be reported as "
-                                        "'DOWN'"), nic)
+                nics = vswitch.get_connected_nics()
+                devices = devices.union(
+                    self._filter_agent_managed_nic_macs(nics))
             except zhmcclient.HTTPError as http_error:
                 LOG.exception(_LE("HTTP error occurred: %s"), http_error)
                 # TODO(andreas_s): Check general HMC connectivity first
