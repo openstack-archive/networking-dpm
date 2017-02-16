@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import oslosphinx
 import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
@@ -27,7 +26,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxcontrib.blockdiag',
     'sphinxcontrib.seqdiag',
-    'oslosphinx',
     'oslo_config.sphinxconfiggen'
 ]
 
@@ -70,14 +68,7 @@ pygments_style = 'sphinx'
 # Sphinx are currently 'default' and 'sphinxdoc'.
 # html_theme_path = ["."]
 # html_theme = '_theme'
-
-# Bullets of a toctree are not getting rendered when docs are build
-# on RTD. The following 2 lines circumvent that.
-# For more details see: https://bugs.launchpad.net/oslosphinx/+bug/1664976
-# Once the bug is fixed, those 2 lines can be remove again
-html_theme_path = [ os.path.join(os.path.dirname(oslosphinx.__file__), 'theme') ]
-html_theme = 'openstack'
-
+html_theme = 'classic'
 # html_static_path = ['static']
 html_static_path = ['_static']
 
