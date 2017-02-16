@@ -290,16 +290,20 @@ class DPMManager(amb.CommonAgentManagerBase):
                                   "Continuing...", nic)
             except zhmcclient.HTTPError:
                 # TODO(andreas_s): Check general HMC connectivity first
-                LOG.warning(_LW("Retrieving connected VNICs for DPM vSwitch "
-                                "%(vswitch)s failed. DPM vSwitch object is "
-                                "not available anymore. This can happen if "
-                                "the corresponding adapter got removed "
-                                "from the system or the corresponding "
-                                "hipersockets network got deleted. Please"
-                                "adjust the physical_adapter_mappings "
-                                "configuration accordingly and start the "
-                                "agent again. Agent terminated!"),
-                            {'vswitch': vswitch})
+                LOG.error(_LE(
+                    "An unrecoverable error occurred!"
+                    "Retrieving connected VNICs for DPM vSwitch "
+                    "%(vswitch)s failed. DPM vSwitch object is "
+                    "not available anymore. This can happen if "
+                    "the corresponding adapter got removed "
+                    "from the system or the corresponding "
+                    "hipersockets network got deleted. Please"
+                    "adjust the physical_network_adapter_mappings "
+                    "configuration accordingly and start the "
+                    "agent again. Agent terminated!"),
+                    {'vswitch': vswitch})
+                # Need to exit with sys.exit, as calling code catches
+                # exceptions
                 sys.exit(1)
         return devices
 
