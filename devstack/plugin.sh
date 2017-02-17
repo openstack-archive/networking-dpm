@@ -16,7 +16,8 @@
 XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
-DPM_AGENT_CONF="/etc/neutron/plugins/ml2/neutron_dpm_agent.ini"
+NETWORKING_DPM_DIR=$DEST/networking-dpm
+DPM_AGENT_CONF="etc/neutron/plugins/ml2/neutron_dpm_agent.conf"
 #DPM_AGENT_CONF="${Q_PLUGIN_CONF_PATH}/dpm_agent.ini"
 DPM_AGENT_BINARY="${NEUTRON_BIN_DIR}/neutron-dpm-agent"
 
@@ -30,13 +31,18 @@ if is_service_enabled q-dpm-agt; then
 
     elif [[ "$1" == "stack" && "$2" == "install" ]]; then
         # Perform installation of service source
-
-        setup_develop $DEST/networking-dpm
+        setup_develop $NETWORKING_DPM_DIR
 
 
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         # Configure after the other layer 1 and 2 services have been configured
-        :
+
+        # Uses oslo config generator to generate core sample configuration files
+        (cd $NETWORKING_DPM_DIR && exec ./tools/generate_config_file_samples.sh)
+
+        if [ -f "$NETWORKING_DPM_DIR/$DPM_AGENT_CONF.sample" ]; then
+            cp "$NETWORKING_DPM_DIR/$DPM_AGENT_CONF.sample" /$DPM_AGENT_CONF
+        fi
 
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         # Initialize and start the template service
