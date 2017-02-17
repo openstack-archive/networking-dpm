@@ -16,7 +16,7 @@
 XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
-DPM_AGENT_CONF="/etc/neutron/plugins/ml2/dpm_agent.ini"
+DPM_AGENT_CONF="/etc/neutron/plugins/ml2/neutron_dpm_agent.ini"
 #DPM_AGENT_CONF="${Q_PLUGIN_CONF_PATH}/dpm_agent.ini"
 DPM_AGENT_BINARY="${NEUTRON_BIN_DIR}/neutron-dpm-agent"
 
