@@ -32,7 +32,6 @@ if is_service_enabled q-dpm-agt; then
         # Perform installation of service source
 
         setup_develop $DEST/networking-dpm
-        iniset /$DPM_AGENT_CONF securitygroup firewall_driver noop
 
 
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
