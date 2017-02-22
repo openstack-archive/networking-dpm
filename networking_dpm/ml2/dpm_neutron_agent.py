@@ -302,8 +302,15 @@ class DPMManager(amb.CommonAgentManagerBase):
                 nics = vswitch.get_connected_nics()
                 devices = devices.union(
                     self._filter_agent_managed_nic_macs(nics))
+            except zhmcclient.ConnectionError as con_err:
+                LOG.error(_LE(
+                    "%(message)s, %(details)s. Lost connection to HMC of "
+                    "CPC %(cpc)s. All NICs of this CPC and its corresponding "
+                    "Neutron ports wil be reported as 'DOWN'."),
+                    {"cpc": self.cpc, "message": con_err,
+                     "details": con_err.details})
+
             except zhmcclient.HTTPError as http_error:
-                # TODO(andreas_s): Check general HMC connectivity first
                 if http_error.http_status == const.HTTP_STATUS_NOT_FOUND:
                     LOG.error(_LE(
                         "An unrecoverable error occurred: %(err)s "
