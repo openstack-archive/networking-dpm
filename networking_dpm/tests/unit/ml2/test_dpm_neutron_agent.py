@@ -18,6 +18,7 @@ import sys
 
 import mock
 from oslo_config import cfg
+from zhmcclient import ConnectionError
 from zhmcclient import HTTPError
 
 from networking_dpm.ml2 import dpm_neutron_agent as dpm_agt
@@ -310,6 +311,14 @@ class TestDPMManager(base.BaseTestCase):
         http_error = HTTPError({'http-status': 404})
         self._test_get_all_devices_vswitch_error(http_error)
         m_exit.assert_called_once_with(1)
+
+    def test_get_all_devices_connection_error(self):
+        vswitch_bad = mock.Mock()
+        vswitch_bad.get_connected_nics.side_effect = ConnectionError("foo")
+        self.mgr.vswitches = [vswitch_bad]
+
+        devices = self.mgr.get_all_devices()
+        self.assertEqual(set(), devices)
 
     def test_get_agent_configurations(self):
         self.mgr.physnet_map = 'foo'
