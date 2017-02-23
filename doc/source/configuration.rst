@@ -30,30 +30,6 @@ ML2 config file *ml2_conf.ini*::
 More details can be found in the OpenStack Configuration Reference on
 `docs.openstack.org <http://docs.openstack.org/>`_.
 
-Configure ML2 for self service VLAN networks
---------------------------------------------
-
-For making use of self service VLAN networks, the physical networks and their
-corresponding VLAN ranges must be defined in the Neutron servers ML2
-configuration file::
-
-  [ml2_type_vlan]
-  network_vlan_ranges = <physical_network>:<vlan_min>:<vlan_max>,<physical_network2>:<vlan_min>:<vlan_max>
-
-More details can be found in the OpenStack Configuration Reference on
-`docs.openstack.org <http://docs.openstack.org/>`_.
-
-.. note::
-  Each physical network that should be used for self service VLAN networks
-  must also be defined in the Neutron DPM agent *physical_adapter_mappings*
-  configuration option. This is also true for other Neutron L2 Agents
-  (for example the Neutron Open vSwitch Agent). They all have a similar
-  *mappings* option that must be configured accordingly.
-
-.. note::
-  This config option is not required if only VLAN provider networks will be
-  used.
-
 Neutron DPM agent
 =================
 
