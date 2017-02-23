@@ -43,7 +43,7 @@ Overview
 .. toctree::
     :maxdepth: 2
 
-.. #    releasenotes/source/unreleased
+    history
 
 Using networking-dpm
 ====================
