@@ -27,6 +27,7 @@ from networking_dpm.ml2 import config
 from networking_dpm.ml2 import constants as const
 from networking_dpm.ml2.mech_dpm import AGENT_TYPE_DPM
 
+from neutron._i18n import _
 from neutron._i18n import _LE
 from neutron._i18n import _LI
 from neutron._i18n import _LW
@@ -130,14 +131,43 @@ class PhysicalNetworkMapping(object):
             sys.exit(1)
 
     @staticmethod
+    def _is_valid_object_id(object_id):
+        # TODO(andreas_s): Move to os-dpm
+        match = re.search("^" + const.OBJECT_ID_REGEX + "$", object_id)
+        if match:
+            return True
+        return False
+
+    @staticmethod
     def _parse_config_line(line):
-        result = line.split(":")
-        # TODO(andreas_s): Validate line
-        net = result[0]
-        adapter_id = result[1]
-        # If no port-element-id was defined, default to 0
+        mapping = line.strip()
+#        if not mapping:
+#            continue
+        split_result = mapping.split(":")
+        if len(split_result) not in [2, 3]:
+            raise ValueError(_("Invalid mapping: '%s'") % mapping)
+
+        net = split_result[0].strip()
+        if not net:
+            raise ValueError(_("Missing physical network in mapping: '%s'")
+                             % mapping)
+
+        adapter_id = split_result[1].strip()
+        if not adapter_id:
+            raise ValueError(_("Missing object-id in mapping: '%s'") % mapping)
+        # HMC requires lower case object-ids. We're tolerant for UC as well
+        adapter_id = adapter_id.lower()
+        if not PhysicalNetworkMapping._is_valid_object_id(adapter_id):
+            raise ValueError(_("Given adapter-id '%s'is not a valid "
+                               "object-id") % adapter_id)
+
+        # If no port-element-id was defined, default to str(0)
         # result[2] can also be '' - handled by 'and result[2]'
-        port = result[2] if len(result) == 3 and result[2] else "0"
+        port = (split_result[2].strip() if len(split_result) == 3 and
+                split_result[2] else '0')
+        if port not in ['0', '1']:
+            raise ValueError(_("Given port-element-id '%s'is not a valid "
+                               "port-element-id") % port)
         return net, adapter_id, port
 
     @staticmethod
