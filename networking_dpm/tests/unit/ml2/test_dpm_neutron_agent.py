@@ -29,8 +29,27 @@ from networking_dpm.tests.unit import fake_zhmcclient
 from neutron.common import topics
 from neutron.tests import base
 
+VALID_ADAPTER_ID = "fa1f2466-12df-311a-804c-4ed2cc1d656b"
+VALID_ADAPTER_ID_UC = "FA1F2466-12DF-311A-804C-4ED2CC1D656B"
+
 
 class TestPhysnetMapping(base.BaseTestCase):
+
+    def test__is_valid_object_id(self):
+        self.assertTrue(dpm_map._is_valid_object_id(VALID_ADAPTER_ID))
+
+    def test__is_valid_object_id_invalid(self):
+        invalid = ["foo",
+                   # Missing -
+                   "fa1f246612df311a804c4ed2cc1d6564",
+                   # Invalid character
+                   "ga1f2466-12df-311a-804c-4ed2cc1d6564",
+                   # Too long
+                   "fa1f2466-12df-311a-804c-4ed2cc1d65641",
+                   # Upper case is not considered as valid by the HMC
+                   VALID_ADAPTER_ID_UC]
+        for oid in invalid:
+            self.assertFalse(dpm_map._is_valid_object_id(oid))
 
     def _test__parse_config_line(self, line, ex_net, ex_adapt, ex_port):
         net, adapt, port = dpm_map._parse_config_line(line)
@@ -39,16 +58,48 @@ class TestPhysnetMapping(base.BaseTestCase):
         self.assertEqual(ex_port, port)
 
     def test__parse_config_line_default_to_zero(self):
-        line = "foo:uuid:"
-        self._test__parse_config_line(line, 'foo', 'uuid', '0')
-        line = "foo:uuid"
-        self._test__parse_config_line(line, 'foo', 'uuid', '0')
+        line = "foo:" + VALID_ADAPTER_ID + ":"
+        self._test__parse_config_line(line, 'foo', VALID_ADAPTER_ID, '0')
+        line = "foo:" + VALID_ADAPTER_ID
+        self._test__parse_config_line(line, 'foo', VALID_ADAPTER_ID, '0')
 
     def test__parse_config_line(self):
-        line = "foo:uuid:1"
-        self._test__parse_config_line(line, 'foo', 'uuid', '1')
+        line = "foo:" + VALID_ADAPTER_ID + ":1"
+        self._test__parse_config_line(line, 'foo', VALID_ADAPTER_ID, '1')
 
-    def test__get_interface_mapping_conf(self):
+    def test__parse_config_line_oid_to_lowercase(self):
+        line = "foo:" + VALID_ADAPTER_ID_UC + ":1"
+        self._test__parse_config_line(line, 'foo', VALID_ADAPTER_ID, '1')
+
+    def test__parse_config_line_invalid_adapter_id(self):
+        line = "foo:bar:1"
+        self.assertRaises(ValueError, dpm_map._parse_config_line, line)
+
+    def test__parse_config_line_invalid_port(self):
+        line = "foo:" + VALID_ADAPTER_ID + ":2"
+        self.assertRaises(ValueError, dpm_map._parse_config_line, line)
+
+    def test__parse_config_line_invalid_mapping(self):
+        invalid_mappings = [
+            # Missing net
+            ":" + VALID_ADAPTER_ID + ":0",
+            # Missing adapter-id
+            "foo::0",
+            # To many ':'
+            "foo:" + VALID_ADAPTER_ID + ":0:1",
+            # Missing adapter-id and port
+            "foo:",
+            # No ':'
+            "foobar"]
+        for mapping in invalid_mappings:
+            self.assertRaises(ValueError, dpm_map._parse_config_line, mapping)
+
+    def test__parse_config_line_empty_line(self):
+        line = ""
+        self.assertRaises(ValueError, dpm_map._parse_config_line, line)
+
+    @mock.patch.object(dpm_map, "_is_valid_object_id", return_value=True)
+    def test__get_interface_mapping_conf(self, mock_is_oid):
         test_mapping = ["physnet1:uuid1:1",
                         "physnet1:uuid2:1",
                         "physnet2:uuid3:1"
@@ -58,7 +109,8 @@ class TestPhysnetMapping(base.BaseTestCase):
         mapping = dpm_map(mock.Mock())
         self.assertEqual(test_mapping, mapping._get_interface_mapping_conf())
 
-    def test_create_mapping(self):
+    @mock.patch.object(dpm_agt.PhysicalNetworkMapping, "_is_valid_object_id")
+    def test_create_mapping(self, mock_is_oid):
         conf_mapping = ["physnet1:uuid-1:",
                         "physnet2:uuid-2:1",
                         "physnet3:uuid-3:0"
@@ -101,7 +153,8 @@ class TestPhysnetMapping(base.BaseTestCase):
         self.assertIn("vswitch-uuid-2", vswitch_ids)
         self.assertIn("vswitch-uuid-3", vswitch_ids)
 
-    def test_create_mapping_invalid_adapter_type(self):
+    @mock.patch.object(dpm_agt.PhysicalNetworkMapping, "_is_valid_object_id")
+    def test_create_mapping_invalid_adapter_type(self, mock_is_oid):
         cfg.CONF.set_override('physical_network_adapter_mappings',
                               ["physnet1:uuid-1:"],
                               group='dpm')
@@ -113,7 +166,8 @@ class TestPhysnetMapping(base.BaseTestCase):
         self.assertRaises(SystemExit,
                           dpm_map.create_mapping, cpc)
 
-    def test_create_mapping_adapter_not_exists(self):
+    @mock.patch.object(dpm_agt.PhysicalNetworkMapping, "_is_valid_object_id")
+    def test_create_mapping_adapter_not_exists(self, mock_is_oid):
         conf_mapping = ['physnet1:not_exists:']
         cfg.CONF.set_override('physical_network_adapter_mappings',
                               conf_mapping, group='dpm')
@@ -125,7 +179,8 @@ class TestPhysnetMapping(base.BaseTestCase):
         self.assertRaises(SystemExit,
                           dpm_map.create_mapping, cpc)
 
-    def test_create_mapping_adapter_port_not_exists(self):
+    @mock.patch.object(dpm_agt.PhysicalNetworkMapping, "_is_valid_object_id")
+    def test_create_mapping_adapter_port_not_exists(self, mock_is_oid):
         conf_mapping = ['physnet1:uuid-1:1']
         cfg.CONF.set_override('physical_network_adapter_mappings',
                               conf_mapping, group='dpm')
@@ -138,7 +193,8 @@ class TestPhysnetMapping(base.BaseTestCase):
         self.assertRaises(SystemExit,
                           dpm_map.create_mapping, cpc)
 
-    def test_create_mapping_vswitch_not_exists(self):
+    @mock.patch.object(dpm_agt.PhysicalNetworkMapping, "_is_valid_object_id")
+    def test_create_mapping_vswitch_not_exists(self, mock_is_oid):
         conf_mapping = ['physnet1:uuid-1:']
         cfg.CONF.set_override('physical_network_adapter_mappings',
                               conf_mapping, group='dpm')
@@ -150,14 +206,16 @@ class TestPhysnetMapping(base.BaseTestCase):
         self.assertRaises(SystemExit,
                           dpm_map.create_mapping, cpc)
 
-    def test_create_mapping_no_config(self):
+    @mock.patch.object(dpm_agt.PhysicalNetworkMapping, "_is_valid_object_id")
+    def test_create_mapping_no_config(self, mock_is_oid):
         cfg.CONF.set_override('physical_network_adapter_mappings', [],
                               group='dpm')
         self.assertRaises(SystemExit,
                           dpm_map.create_mapping,
                           mock.Mock())
 
-    def test_create_mapping_multiple_adapters_per_physnet(self):
+    @mock.patch.object(dpm_agt.PhysicalNetworkMapping, "_is_valid_object_id")
+    def test_create_mapping_multiple_adapters_per_physnet(self, mock_is_oid):
         mapping = ['physnet1:uuid-1:', 'physnet1:uuid-3:0']
         cfg.CONF.set_override('physical_network_adapter_mappings', mapping,
                               group='dpm')

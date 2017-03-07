@@ -15,3 +15,4 @@
 #    under the License.
 
 HTTP_STATUS_NOT_FOUND = 404
+OBJECT_ID_REGEX = "[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}"
