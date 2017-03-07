@@ -120,10 +120,7 @@ class PhysicalNetworkMapping(object):
         try:
             # TODO(andreas_s): Optimize in zhmcclient - For 'find' the
             # whole list of items is retrieved
-            # TODO(andreas_s): zhmcclient requires the port-element-id as
-            # string. Int results in an NotFound Error.
-            # See https://github.com/zhmcclient/python-zhmcclient/issues/125
-            adapter.ports.find(**{'element-id': str(port)})
+            adapter.ports.find(**{'element-id': port})
         except zhmcclient.NotFound:
             LOG.error(_LE("Configured port %(port)s for adapter "
                           "%(adapt)s does not exist. Please update "
@@ -140,7 +137,7 @@ class PhysicalNetworkMapping(object):
         adapter_id = result[1]
         # If no port-element-id was defined, default to 0
         # result[2] can also be '' - handled by 'and result[2]'
-        port = int(result[2] if len(result) == 3 and result[2] else 0)
+        port = result[2] if len(result) == 3 and result[2] else "0"
         return net, adapter_id, port
 
     @staticmethod
