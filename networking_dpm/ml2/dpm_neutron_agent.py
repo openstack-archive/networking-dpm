@@ -23,7 +23,7 @@ import oslo_messaging
 from oslo_service import service
 import zhmcclient
 
-from networking_dpm.ml2 import config
+from networking_dpm.conf import config
 from networking_dpm.ml2 import constants as const
 from networking_dpm.ml2.mech_dpm import AGENT_TYPE_DPM
 

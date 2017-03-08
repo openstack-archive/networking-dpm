@@ -17,9 +17,9 @@
 from os_dpm.config import config as os_dpm_conf
 from oslo_config import cfg
 
-from networking_dpm.ml2 import config
-
 from neutron.tests import base
+
+from networking_dpm.conf import config
 
 
 class TestConfig(base.BaseTestCase):
