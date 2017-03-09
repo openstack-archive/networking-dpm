@@ -32,36 +32,10 @@ from neutron.tests import base
 
 class TestPhysnetMapping(base.BaseTestCase):
 
-    def _test__parse_config_line(self, line, ex_net, ex_adapt, ex_port):
-        net, adapt, port = dpm_map._parse_config_line(line)
-        self.assertEqual(ex_net, net)
-        self.assertEqual(ex_adapt, adapt)
-        self.assertEqual(ex_port, port)
-
-    def test__parse_config_line_default_to_zero(self):
-        line = "foo:uuid:"
-        self._test__parse_config_line(line, 'foo', 'uuid', '0')
-        line = "foo:uuid"
-        self._test__parse_config_line(line, 'foo', 'uuid', '0')
-
-    def test__parse_config_line(self):
-        line = "foo:uuid:1"
-        self._test__parse_config_line(line, 'foo', 'uuid', '1')
-
-    def test__get_interface_mapping_conf(self):
-        test_mapping = ["physnet1:uuid1:1",
-                        "physnet1:uuid2:1",
-                        "physnet2:uuid3:1"
-                        ]
-        cfg.CONF.set_override('physical_network_adapter_mappings',
-                              test_mapping, group='dpm')
-        mapping = dpm_map(mock.Mock())
-        self.assertEqual(test_mapping, mapping._get_interface_mapping_conf())
-
     def test_create_mapping(self):
-        conf_mapping = ["physnet1:uuid-1:",
-                        "physnet2:uuid-2:1",
-                        "physnet3:uuid-3:0"
+        conf_mapping = [("physnet1", "uuid-1", "0"),
+                        ("physnet2", "uuid-2", "1"),
+                        ("physnet3", "uuid-3", "0")
                         ]
         cfg.CONF.set_override('physical_network_adapter_mappings',
                               conf_mapping, group='dpm')
@@ -103,7 +77,7 @@ class TestPhysnetMapping(base.BaseTestCase):
 
     def test_create_mapping_invalid_adapter_type(self):
         cfg.CONF.set_override('physical_network_adapter_mappings',
-                              ["physnet1:uuid-1:"],
+                              [('physnet1', 'uuid-1', '0')],
                               group='dpm')
         hmc = {"cpcs": [{
             "object-id": "cpcpid",
@@ -114,7 +88,7 @@ class TestPhysnetMapping(base.BaseTestCase):
                           dpm_map.create_mapping, cpc)
 
     def test_create_mapping_adapter_not_exists(self):
-        conf_mapping = ['physnet1:not_exists:']
+        conf_mapping = [('physnet1', 'not_exists', '0')]
         cfg.CONF.set_override('physical_network_adapter_mappings',
                               conf_mapping, group='dpm')
         hmc = {"cpcs": [{
@@ -126,7 +100,7 @@ class TestPhysnetMapping(base.BaseTestCase):
                           dpm_map.create_mapping, cpc)
 
     def test_create_mapping_adapter_port_not_exists(self):
-        conf_mapping = ['physnet1:uuid-1:1']
+        conf_mapping = [('physnet1', 'uuid-1', '1')]
         cfg.CONF.set_override('physical_network_adapter_mappings',
                               conf_mapping, group='dpm')
         hmc = {"cpcs": [{
@@ -139,7 +113,7 @@ class TestPhysnetMapping(base.BaseTestCase):
                           dpm_map.create_mapping, cpc)
 
     def test_create_mapping_vswitch_not_exists(self):
-        conf_mapping = ['physnet1:uuid-1:']
+        conf_mapping = [('physnet1', 'uuid-1', '0')]
         cfg.CONF.set_override('physical_network_adapter_mappings',
                               conf_mapping, group='dpm')
         hmc = {"cpcs": [{
@@ -150,15 +124,8 @@ class TestPhysnetMapping(base.BaseTestCase):
         self.assertRaises(SystemExit,
                           dpm_map.create_mapping, cpc)
 
-    def test_create_mapping_no_config(self):
-        cfg.CONF.set_override('physical_network_adapter_mappings', [],
-                              group='dpm')
-        self.assertRaises(SystemExit,
-                          dpm_map.create_mapping,
-                          mock.Mock())
-
     def test_create_mapping_multiple_adapters_per_physnet(self):
-        mapping = ['physnet1:uuid-1:', 'physnet1:uuid-3:0']
+        mapping = [('physnet1', 'uuid-1', '0'), ('physnet1', 'uuid-3', '0')]
         cfg.CONF.set_override('physical_network_adapter_mappings', mapping,
                               group='dpm')
 

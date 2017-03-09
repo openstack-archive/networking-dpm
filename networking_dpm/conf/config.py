@@ -17,6 +17,8 @@
 from os_dpm.config import config as os_dpm_conf
 from oslo_config import cfg
 
+from networking_dpm.conf.cfg import MultiNetworkAdapterMappingOpt
+
 # Update help text of DPM group with networking-dpm specifics
 os_dpm_conf.DPM_GROUP.help += """
 
@@ -34,9 +36,10 @@ mapping_example = ["physnet1:12345678-1234-1234-1234-123456789a",
 # TODO(andreas_s): Neutron does not make use of required=True, therefore
 # the Neutron test base class tests fail when enabled
 dpm_opts = [
-    cfg.MultiStrOpt('physical_network_adapter_mappings',
-                    sample_default=mapping_example,
-                    help="""
+    MultiNetworkAdapterMappingOpt(
+        'physical_network_adapter_mappings',
+        sample_default=mapping_example,
+        help="""
 The OpenStack physical networks that can be used by this OpenStack hypervisor
 host, and their backing network adapters and ports in the target CPC.
 
