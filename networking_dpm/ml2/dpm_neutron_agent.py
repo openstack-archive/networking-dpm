@@ -132,36 +132,12 @@ class PhysicalNetworkMapping(object):
             sys.exit(1)
 
     @staticmethod
-    def _parse_config_line(line):
-        result = line.split(":")
-        # TODO(andreas_s): Validate line
-        net = result[0]
-        adapter_id = result[1]
-        # If no port-element-id was defined, default to 0
-        # result[2] can also be '' - handled by 'and result[2]'
-        port = result[2] if len(result) == 3 and result[2] else "0"
-        return net, adapter_id, port
-
-    @staticmethod
-    def _get_interface_mapping_conf():
-        interface_mappings = CONF.dpm.physical_network_adapter_mappings
-
-        if not interface_mappings:
-            LOG.error(_LE("physical_adapter_mappings dpm configuration not "
-                          "specified or empty value provided. Agent "
-                          "terminated!"))
-            sys.exit(1)
-
-        return interface_mappings
-
-    @staticmethod
     def create_mapping(cpc):
         mapping = PhysicalNetworkMapping(cpc)
-        interface_mappings = mapping._get_interface_mapping_conf()
 
-        for entry in interface_mappings:
-            net, adapter_uuid, port = \
-                PhysicalNetworkMapping._parse_config_line(entry)
+        for entry in CONF.dpm.physical_network_adapter_mappings:
+            # Safe as config option ensures validity of the tuple
+            net, adapter_uuid, port = entry
 
             adapter = mapping._get_adapter(adapter_uuid)
             mapping._validate_adapter_type(adapter)
