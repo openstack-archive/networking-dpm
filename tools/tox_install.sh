@@ -55,6 +55,7 @@ elif [ -x "$ZUUL_CLONER" ]; then
         openstack/neutron
     cd openstack/neutron
     $install_cmd -e .
+    $install_cmd -U -r ./test-requirements.txt
     popd
 else
     echo "PIP HARDCODE" > /tmp/tox_install.txt
@@ -62,6 +63,7 @@ else
         NEUTRON_PIP_LOCATION="git+https://git.openstack.org/openstack/neutron@$BRANCH_NAME#egg=neutron"
     fi
     $install_cmd -U -e ${NEUTRON_PIP_LOCATION}
+    $install_cmd -U -r http://git.openstack.org/cgit/openstack/neutron/plain/test-requirements.txt
 fi
 
 $install_cmd -U $*
