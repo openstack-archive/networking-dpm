@@ -34,6 +34,7 @@ shift
 if [ -d "$NEUTRON_DIR" ]; then
     echo "FOUND Neutron code at $NEUTRON_DIR - using"
     $install_cmd -U -e $NEUTRON_DIR
+    $install_cmd -U -r $NEUTRON_DIR/test-requirements.txt
 elif [ $neutron_installed -eq 0 ]; then
     echo "ALREADY INSTALLED" > /tmp/tox_install.txt
     location=$(python -c "import neutron; print(neutron.__file__)")
@@ -55,6 +56,7 @@ elif [ -x "$ZUUL_CLONER" ]; then
         openstack/neutron
     cd openstack/neutron
     $install_cmd -e .
+    $install_cmd -U -r ./test-requirements.txt
     popd
 else
     echo "PIP HARDCODE" > /tmp/tox_install.txt
@@ -62,6 +64,7 @@ else
         NEUTRON_PIP_LOCATION="git+https://git.openstack.org/openstack/neutron@$BRANCH_NAME#egg=neutron"
     fi
     $install_cmd -U -e ${NEUTRON_PIP_LOCATION}
+    $install_cmd -U -r http://git.openstack.org/cgit/openstack/neutron/plain/test-requirements.txt
 fi
 
 $install_cmd -U $*
