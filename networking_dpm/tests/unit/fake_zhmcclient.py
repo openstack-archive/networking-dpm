@@ -82,15 +82,12 @@ class _NIC(_BaseObject):
 
 class _Port(_BaseObject):
     def __init__(self, port_json):
+        # Ports 'element-id' attribute is of type string, while a
+        # vswitchs 'port' attribute is a int
+        if (port_json.get('element-id') is not None and
+                not isinstance(port_json.get('element-id'), str)):
+            raise TypeError("Element-id attribute must be of type String!")
         super(_Port, self).__init__(port_json)
-
-    def get_property(self, name):
-        value = super(_Port, self).get_property(name)
-        # TODO(andreas_s) zhmcclient treats element-id as string
-        # https://github.com/zhmcclient/python-zhmcclient/issues/125
-        if name == 'element-id' and type(value) == int:
-            value = str(value)
-        return value
 
 
 class _Adapter(_BaseObject):
@@ -102,6 +99,12 @@ class _Adapter(_BaseObject):
 class _VSwitch(_BaseObject):
     def __init__(self, vswitch_json):
         self.nics = [_NIC(nic) for nic in vswitch_json.pop('nics', [])]
+        # vswitch 'port' attribute is of type int, while an adapter ports
+        # 'element-id' is a string
+        port = vswitch_json.get('port')
+        if port is not None and not isinstance(port, int):
+            raise TypeError("Port attribute must be of type 'int', but is of "
+                            "type'%s'. Json: %s!" % (type(port), vswitch_json))
         super(_VSwitch, self).__init__(vswitch_json)
 
     def get_connected_nics(self):
@@ -174,11 +177,15 @@ def get_client(hmc_json):
     :param hmc_json: A json dict or json string representing the hmc
     :return: faked zhmcclient client instance
     """
+    print "XXX %s" % hmc_json
+    foo = [{"foo": 0}]
+    bar = {'blub': '0', 'test': foo}
+    print "YYY %s" % bar
     # Test if input is a valid json
-    if type(hmc_json) == dict:
-        json.dumps(hmc_json)
-    elif type(hmc_json) == str:
-        hmc_json = json.loads(hmc_json)
+    #if type(hmc_json) == dict:
+    #    json.dumps(hmc_json)
+    #elif type(hmc_json) == str:
+    #    hmc_json = json.loads(hmc_json)
 
     client = _Client(hmc_json)
     _client_consistency_check(client)
@@ -191,5 +198,7 @@ def get_cpc(test_json):
     :param test_json: A json dict or json string representing the hmc
     :return: faked zhmcclient cpc instance
     """
+    print test_json
+    #print "AAA %s " % type(test_json['cpcs'][0]['vswitches'][0]['port'])
     client = get_client(test_json)
     return client.cpcs.list()[0]

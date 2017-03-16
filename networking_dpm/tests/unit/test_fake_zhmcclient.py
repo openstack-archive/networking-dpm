@@ -103,22 +103,44 @@ class TestFakeZHMC(base.BaseTestCase):
 
         self.assertEqual(0, len(cpc1.vswitches.list()))
 
-    def test_port_element_id(self):
+    def test_port_element_id_int_fail(self):
         """zhmcclient treats element-id as string
-
-        https://github.com/zhmcclient/python-zhmcclient/issues/125
         """
-        ports_json = [{'element-id': 0}, {'element-id': '1'}]
-        adapter_json = {'object-id': 'oid1', 'ports': ports_json}
+        port_json = {'element-id': 0}
+        try:
+            fake_zhmcclient._Port(port_json)
+            self.fail("Type error should be thrown, as port-element-id was "
+                      "provided as int")
+        except TypeError:
+            pass
 
-        adapt = fake_zhmcclient._Adapter(adapter_json)
-        self.assertRaises(fake_zhmcclient.NotFound,
-                          adapt.ports.find, **{'element-id': 0})
-        self.assertRaises(fake_zhmcclient.NotFound,
-                          adapt.ports.find, **{'element-id': 1})
+    def test_port_element_id_string_ok(self):
+        """zhmcclient treats element-id as string
+        """
+        port_json = {'element-id': '0'}
+        self.assertIsNotNone(fake_zhmcclient._Port(port_json))
 
-        self.assertIsNotNone(adapt.ports.find(**{'element-id': '0'}))
-        self.assertIsNotNone(adapt.ports.find(**{'element-id': '1'}))
+    def test_vswitch_port_string_fail(self):
+        """zhmcclient treats vswitch 'port' attribute as int
+
+        But 'port-element-id' of the adapter is treated as String
+        """
+        vswitches_json = {'port': '0'}
+        try:
+            fake_zhmcclient._VSwitch(vswitches_json)
+            self.fail("Type error should be thrown, as port was provided as "
+                      "int")
+        except TypeError:
+            pass
+
+    def test_vswitch_port_int_ok(self):
+        """zhmcclient treats vswitch 'port' attribute as int
+
+        But 'port-element-id' of the adapter is treated as String
+        """
+        vswitches_json = {'port': 0}
+
+        self.assertIsNotNone(fake_zhmcclient._VSwitch(vswitches_json))
 
     def test_fakehmc_consistency_fail(self):
         vswitches = [{'backing-adapter-uri': '/api/adapters/uuid-0',
