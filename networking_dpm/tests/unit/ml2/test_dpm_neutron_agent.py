@@ -58,6 +58,16 @@ class TestPhysnetMapping(base.BaseTestCase):
         mapping = dpm_map(mock.Mock())
         self.assertEqual(test_mapping, mapping._get_interface_mapping_conf())
 
+    def test__get_vswitch_port_converted_to_int(self):
+        vswitches = [
+            {"backing-adapter-uri": "/api/adapters/uuid-1",
+             "port": 0}]
+        hmc = {"cpcs": [{"vswitches": vswitches}]}
+        cpc = fake_zhmcclient.get_cpc(hmc)
+        mapping = dpm_map(cpc)
+        vswitch = mapping._get_vswitch("uuid-1", "0")
+        self.assertEqual(0, vswitch.get_property("port"))
+
     def test_create_mapping(self):
         conf_mapping = ["physnet1:uuid-1:",
                         "physnet2:uuid-2:1",
@@ -78,13 +88,13 @@ class TestPhysnetMapping(base.BaseTestCase):
         vswitches = [
             {"backing-adapter-uri": "/api/adapters/uuid-1",
              "object-id": "vswitch-uuid-1",
-             "port": "0"},
+             "port": 0},
             {"backing-adapter-uri": "/api/adapters/uuid-2",
              "object-id": "vswitch-uuid-2",
-             "port": "1"},
+             "port": 1},
             {"backing-adapter-uri": "/api/adapters/uuid-3",
              "object-id": "vswitch-uuid-3",
-             "port": "0"}]
+             "port": 0}]
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": vswitches,
                          "adapters": adapters}]}
         cpc = fake_zhmcclient.get_cpc(hmc)
