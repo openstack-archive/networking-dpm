@@ -82,15 +82,14 @@ class _NIC(_BaseObject):
 
 class _Port(_BaseObject):
     def __init__(self, port_json):
+        # Ports 'element-id' attribute is of type string, while a
+        # vswitchs 'port' attribute is a int
+        element_id = port_json.get('element-id')
+        if (element_id is not None and
+                not isinstance(element_id, str)):
+            raise TypeError("Element-id attribute must be of type 'str', but "
+                            "is of type '%s'." % type(element_id))
         super(_Port, self).__init__(port_json)
-
-    def get_property(self, name):
-        value = super(_Port, self).get_property(name)
-        # TODO(andreas_s) zhmcclient treats element-id as string
-        # https://github.com/zhmcclient/python-zhmcclient/issues/125
-        if name == 'element-id' and type(value) == int:
-            value = str(value)
-        return value
 
 
 class _Adapter(_BaseObject):
@@ -102,6 +101,12 @@ class _Adapter(_BaseObject):
 class _VSwitch(_BaseObject):
     def __init__(self, vswitch_json):
         self.nics = [_NIC(nic) for nic in vswitch_json.pop('nics', [])]
+        # vswitch 'port' attribute is of type int, while an adapter ports
+        # 'element-id' is a string
+        port = vswitch_json.get('port')
+        if port is not None and not isinstance(port, int):
+            raise TypeError("Port attribute must be of type 'int', but is of "
+                            "type '%s'." % type(port))
         super(_VSwitch, self).__init__(vswitch_json)
 
     def get_connected_nics(self):
