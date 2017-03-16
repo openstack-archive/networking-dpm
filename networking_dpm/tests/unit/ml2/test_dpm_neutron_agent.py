@@ -177,10 +177,10 @@ class TestPhysnetMapping(base.BaseTestCase):
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
             {"backing-adapter-uri": "/api/adapters/uuid-1",
              "object-id": "vswitch-uuid-1",
-             "port": "0"},
+             "port": 0},
             {"backing-adapter-uri": "/api/adapters/uuid-3",
              "object-id": "vswitch-uuid-3",
-             "port": "0"}], "adapters": adapters}]}
+             "port": 0}], "adapters": adapters}]}
         cpc = fake_zhmcclient.get_cpc(hmc)
         self.assertRaises(SystemExit,
                           dpm_map.create_mapping,
@@ -243,19 +243,19 @@ class TestDPMManager(base.BaseTestCase):
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
             {"backing-adapter-uri": "/api/adapters/uuid-1",
              "object-id": "vswitch-uuid-1",
-             "port": "0",
+             "port": 0,
              "nics": [{"description": "foomac=00:00:00:00:00:11bar"},
                       {"description": "foomac=00:00:00:00:00:33bar"}]},
             {"backing-adapter-uri": "/api/adapters/uuid-2",
              "object-id": "vswitch-uuid-2",
-             "port": "1",
+             "port": 1,
              "nics": [{"description": "foomac=00:00:00:00:00:22bar"}]},
             {"backing-adapter-uri": "/api/adapters/uuid-3",
              "object-id": "vswitch-uuid-3",
-             "port": "0"},
+             "port": 0},
             {"backing-adapter-uri": "/api/adapters/not-configured",
              "object-id": "not-configured",
-             "port": "1",
+             "port": 1,
              "nics": [{"description": "not-configured"}]},
         ]}]}
 
@@ -276,7 +276,7 @@ class TestDPMManager(base.BaseTestCase):
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
             {"backing-adapter-uri": "/api/adapters/uuid-1",
              "object-id": "vswitch-uuid-1",
-             "port": "0",
+             "port": 0,
              "nics": [{"description": "OpenStack foo"}]},
         ]}]}
 
@@ -291,7 +291,7 @@ class TestDPMManager(base.BaseTestCase):
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
             {"backing-adapter-uri": "/api/adapters/uuid-1",
              "object-id": "vswitch-uuid-1",
-             "port": "0",
+             "port": 0,
              "nics": [{"name": "port-id-1"}]},
         ]}]}
         cpc = self.mgr.cpc = fake_zhmcclient.get_cpc(hmc)
