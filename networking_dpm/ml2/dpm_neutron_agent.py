@@ -70,7 +70,9 @@ class PhysicalNetworkMapping(object):
             # whole list of items is retrieved
             return self._cpc.vswitches.find(**{
                 'backing-adapter-uri': ADAPTER_URI + adapter_id,
-                'port': port
+                # 'port' attribute of vswitch is a int (while 'port-element-id'
+                # of an adapter is a String)
+                'port': int(port)
             })
         except zhmcclient.NotFound:
             LOG.error(
