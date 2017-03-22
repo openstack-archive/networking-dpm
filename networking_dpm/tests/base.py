@@ -15,9 +15,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
+
 from neutron.tests import base
 
 
 class BaseTestCase(base.BaseTestCase):
 
     """Test case base class for all unit tests."""
+    def flags(self, **kw):
+        """Override config variables for a test."""
+        group = kw.pop('group', None)
+        for k, v in kw.items():
+            cfg.CONF.set_override(k, v, group, enforce_type=True)
