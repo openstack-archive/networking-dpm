@@ -15,9 +15,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslotest import base
+from neutron.tests import base
 
 
-class TestCase(base.BaseTestCase):
+class BaseTestCase(base.BaseTestCase):
 
     """Test case base class for all unit tests."""
