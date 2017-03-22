@@ -17,10 +17,9 @@ from oslo_config import cfg
 from oslo_config.fixture import Config
 import tempfile
 
-from neutron.tests import base
-
 from networking_dpm.conf.cfg import MultiNetworkAdapterMappingOpt
 from networking_dpm.conf.types import NetworkAdapterMappingType
+from networking_dpm.tests import base
 
 
 class TestNetworkAdapterMappingType(base.BaseTestCase):

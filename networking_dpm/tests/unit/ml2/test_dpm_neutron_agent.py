@@ -24,10 +24,10 @@ from zhmcclient import HTTPError
 from networking_dpm.ml2 import dpm_neutron_agent as dpm_agt
 from networking_dpm.ml2.dpm_neutron_agent import (PhysicalNetworkMapping as
                                                   dpm_map)
+from networking_dpm.tests import base
 from networking_dpm.tests.unit import fake_zhmcclient
 
 from neutron.common import topics
-from neutron.tests import base
 
 
 class TestPhysnetMapping(base.BaseTestCase):
