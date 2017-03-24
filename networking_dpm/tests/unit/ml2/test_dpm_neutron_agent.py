@@ -17,7 +17,6 @@
 import sys
 
 import mock
-from oslo_config import cfg
 from zhmcclient import ConnectionError
 from zhmcclient import HTTPError
 
@@ -29,34 +28,36 @@ from networking_dpm.tests.unit import fake_zhmcclient
 
 from neutron.common import topics
 
+OID_A = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+OID_B = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+OID_C = "cccccccc-cccc-cccc-cccc-cccccccccccc"
+
 
 class TestPhysnetMapping(base.BaseTestCase):
 
     def test_create_mapping(self):
-        conf_mapping = [("physnet1", "uuid-1", "0"),
-                        ("physnet2", "uuid-2", "1"),
-                        ("physnet3", "uuid-3", "0")
-                        ]
-        cfg.CONF.set_override('physical_network_adapter_mappings',
-                              conf_mapping, group='dpm')
+        conf_mapping = ["physnet1:" + OID_A + ":0",
+                        "physnet2:" + OID_B + ":1",
+                        "physnet3:" + OID_C + ":0"]
+        self.flags(group="dpm", physical_network_adapter_mappings=conf_mapping)
         expected = {'physnet1': ['vswitch-uuid-1'],
                     'physnet2': ['vswitch-uuid-2'],
                     'physnet3': ['vswitch-uuid-3']}
 
-        adapters = [{'object-id': 'uuid-1', 'type': 'osd',
-                     'ports': [{'element-id': '0'}]},
-                    {'object-id': 'uuid-2', 'type': 'osd',
-                     'ports': [{'element-id': '1'}]},
-                    {'object-id': 'uuid-3', 'type': 'hipersockets',
-                     'ports': [{'element-id': '0'}]}]
+        adapters = [{'object-id': OID_A,
+                     'type': 'osd', 'ports': [{'element-id': '0'}]},
+                    {'object-id': OID_B,
+                     'type': 'osd', 'ports': [{'element-id': '1'}]},
+                    {'object-id': OID_C,
+                     'type': 'hipersockets', 'ports': [{'element-id': '0'}]}]
         vswitches = [
-            {"backing-adapter-uri": "/api/adapters/uuid-1",
+            {"backing-adapter-uri": "/api/adapters/" + OID_A,
              "object-id": "vswitch-uuid-1",
              "port": 0},
-            {"backing-adapter-uri": "/api/adapters/uuid-2",
+            {"backing-adapter-uri": "/api/adapters/" + OID_B,
              "object-id": "vswitch-uuid-2",
              "port": 1},
-            {"backing-adapter-uri": "/api/adapters/uuid-3",
+            {"backing-adapter-uri": "/api/adapters/" + OID_C,
              "object-id": "vswitch-uuid-3",
              "port": 0}]
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": vswitches,
@@ -76,9 +77,8 @@ class TestPhysnetMapping(base.BaseTestCase):
         self.assertIn("vswitch-uuid-3", vswitch_ids)
 
     def test_create_mapping_invalid_adapter_type(self):
-        cfg.CONF.set_override('physical_network_adapter_mappings',
-                              [('physnet1', 'uuid-1', '0')],
-                              group='dpm')
+        conf_mapping = ["physnet1:" + OID_A + ":0"]
+        self.flags(group="dpm", physical_network_adapter_mappings=conf_mapping)
         hmc = {"cpcs": [{
             "object-id": "cpcpid",
             "adapters": [{'object-id': 'uuid-1', 'type': 'bad_type'}]}]}
@@ -88,9 +88,8 @@ class TestPhysnetMapping(base.BaseTestCase):
                           dpm_map.create_mapping, cpc)
 
     def test_create_mapping_adapter_not_exists(self):
-        conf_mapping = [('physnet1', 'not_exists', '0')]
-        cfg.CONF.set_override('physical_network_adapter_mappings',
-                              conf_mapping, group='dpm')
+        conf_mapping = ["physnet1:" + OID_A + ":0"]
+        self.flags(group="dpm", physical_network_adapter_mappings=conf_mapping)
         hmc = {"cpcs": [{
             "object-id": "cpcpid",
             "adapters": [{'object-id': 'other_adapter', 'type': 'osd'}]}]}
@@ -100,12 +99,11 @@ class TestPhysnetMapping(base.BaseTestCase):
                           dpm_map.create_mapping, cpc)
 
     def test_create_mapping_adapter_port_not_exists(self):
-        conf_mapping = [('physnet1', 'uuid-1', '1')]
-        cfg.CONF.set_override('physical_network_adapter_mappings',
-                              conf_mapping, group='dpm')
+        conf_mapping = ["physnet1:" + OID_A + ":1"]
+        self.flags(group="dpm", physical_network_adapter_mappings=conf_mapping)
         hmc = {"cpcs": [{
             "object-id": "cpcpid",
-            "adapters": [{'object-id': 'uuid-1', 'type': 'osd',
+            "adapters": [{'object-id': OID_A, 'type': 'osd',
                           'ports': []}]}]}
 
         cpc = fake_zhmcclient.get_cpc(hmc)
@@ -113,29 +111,28 @@ class TestPhysnetMapping(base.BaseTestCase):
                           dpm_map.create_mapping, cpc)
 
     def test_create_mapping_vswitch_not_exists(self):
-        conf_mapping = [('physnet1', 'uuid-1', '0')]
-        cfg.CONF.set_override('physical_network_adapter_mappings',
-                              conf_mapping, group='dpm')
+        conf_mapping = ["physnet1:" + OID_A + ":0"]
+        self.flags(group="dpm", physical_network_adapter_mappings=conf_mapping)
         hmc = {"cpcs": [{
             "object-id": "cpcpid",
-            "adapters": [{'object-id': 'uuid-1', 'type': 'osd'}]}]}
+            "adapters": [{'object-id': OID_A, 'type': 'osd'}]}]}
 
         cpc = fake_zhmcclient.get_cpc(hmc)
         self.assertRaises(SystemExit,
                           dpm_map.create_mapping, cpc)
 
     def test_create_mapping_multiple_adapters_per_physnet(self):
-        mapping = [('physnet1', 'uuid-1', '0'), ('physnet1', 'uuid-3', '0')]
-        cfg.CONF.set_override('physical_network_adapter_mappings', mapping,
-                              group='dpm')
+        conf_mapping = ["physnet1:" + OID_A + ":0",
+                        "physnet1:" + OID_B + ":0"]
+        self.flags(group="dpm", physical_network_adapter_mappings=conf_mapping)
 
-        adapters = [{'object-id': 'uuid-1', 'type': 'osd'},
-                    {'object-id': 'uuid-3', 'type': 'osd'}]
+        adapters = [{'object-id': OID_A, 'type': 'osd'},
+                    {'object-id': OID_B, 'type': 'osd'}]
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
-            {"backing-adapter-uri": "/api/adapters/uuid-1",
+            {"backing-adapter-uri": "/api/adapters/" + OID_A,
              "object-id": "vswitch-uuid-1",
              "port": 0},
-            {"backing-adapter-uri": "/api/adapters/uuid-3",
+            {"backing-adapter-uri": "/api/adapters/" + OID_B,
              "object-id": "vswitch-uuid-3",
              "port": 0}], "adapters": adapters}]}
         cpc = fake_zhmcclient.get_cpc(hmc)
@@ -165,7 +162,7 @@ class TestDPMManager(base.BaseTestCase):
         self.mgr = dpm_agt.DPMManager({}, mock.Mock(), [])
 
     def test__managed_by_agent(self):
-        cfg.CONF.set_override('host', 'foo-host')
+        self.flags(host='foo-host')
         valid_mac_str = "mac=00:11:22:33:44:55:66"
         # Host and mac part of description
         self.assertTrue(self.mgr._managed_by_agent(fake_zhmcclient._NIC(
@@ -293,7 +290,7 @@ class TestDPMManager(base.BaseTestCase):
         self.assertEqual(expected, self.mgr.get_agent_configurations())
 
     def test_get_agent_id(self):
-        cfg.CONF.set_override('host', 'foo')
+        self.flags(host='foo')
         self.assertEqual("dpm-foo", self.mgr.get_agent_id())
 
     def test_get_extension_driver_type(self):
@@ -328,12 +325,12 @@ class TestDPMMain(base.BaseTestCase):
         valid_drivers = ['neutron.agent.firewall.NoopFirewallDriver',
                          'noop']
         for driver in valid_drivers:
-            cfg.CONF.set_override('firewall_driver', driver, 'SECURITYGROUP')
+            self.flags(group='SECURITYGROUP', firewall_driver=driver)
             dpm_agt._validate_firewall_driver()
 
     @mock.patch.object(sys, 'exit')
     def test__validate_firewall_driver_invalid(self, mock_exit):
-        cfg.CONF.set_override('firewall_driver', 'foo', 'SECURITYGROUP')
+        self.flags(group='SECURITYGROUP', firewall_driver='foo')
         dpm_agt._validate_firewall_driver()
         mock_exit.assert_called_with(1)
 
