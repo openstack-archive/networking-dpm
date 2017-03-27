@@ -30,7 +30,7 @@ class TestNetworkAdapterMappingType(base.BaseTestCase):
         :param files: A list of files of tuples in the format
            [('filename1', 'line1\nline2\n'), ('filename2', 'line1\nline2\n')]
         :param ext: The file extension to be used
-        :return List of file paths
+        :return: List of file paths
            paths[0] = path of filename1
            paths[1] = path of filename2
         """
