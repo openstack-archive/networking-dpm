@@ -1,8 +1,8 @@
-Q_PLUGIN=${Q_PLUGIN:-"ml2"}
-#Q_AGENT=${Q_AGENT:-""}
+# Configure Mechanism Driver
 # Gets overwritten in neutron-legacy if "Q_DVR_MODE" != "legacy"
 Q_ML2_PLUGIN_MECHANISM_DRIVERS=${Q_ML2_PLUGIN_MECHANISM_DRIVERS:-openvswitch,dpm}
-#Q_ML2_PLUGIN_TYPE_DRIVERS=${Q_ML2_PLUGIN_TYPE_DRIVERS:-flat}
+
+# Configure provider networking
 Q_USE_PROVIDER_NETWORKING=True
 PROVIDER_SUBNET_NAME="provider_net"
 PROVIDER_NETWORK_TYPE="flat"
