@@ -1,0 +1,8 @@
+Code-Review+2: Andreas Scheuring <andreas.scheuring@de.ibm.com>
+Workflow+1: Andreas Scheuring <andreas.scheuring@de.ibm.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 17 May 2017 06:39:30 +0000
+Reviewed-on: https://review.openstack.org/464823
+Project: openstack/networking-dpm
+Branch: refs/heads/stable/ocata
