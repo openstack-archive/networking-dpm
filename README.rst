@@ -19,7 +19,7 @@ Links
 -----
 
 * Documentation: `<http://networking-dpm.readthedocs.io/en/latest/>`_
-* Source: `<http://git.openstack.org/cgit/openstack/networking-dpm>`_
+* Source: `<https://git.openstack.org/cgit/openstack/networking-dpm>`_
 * Github shadow: `<https://github.com/openstack/networking-dpm>`_
 * Bugs: `<http://bugs.launchpad.net/networking-dpm>`_
 * Gerrit: `<https://review.openstack.org/#/q/project:openstack/networking-dpm>`_
