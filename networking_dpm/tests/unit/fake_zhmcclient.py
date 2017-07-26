@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import mock
 from zhmcclient import NotFound
 from zhmcclient import NoUniqueMatch
 
@@ -28,6 +29,10 @@ the HMC. For an example, see the corresponding test case.
 
 [1] https://github.com/zhmcclient/python-zhmcclient
 """
+
+
+MANAGER_MOCK = mock.Mock()
+MANAGER_MOCK.resource_class.__name__ = "foo"
 
 
 class _BaseObject(object):
@@ -56,9 +61,9 @@ class _BaseManager(object):
         matches = self.findall(**kwargs)
         num_matches = len(matches)
         if num_matches == 0:
-            raise NotFound
+            raise NotFound([], MANAGER_MOCK)
         elif num_matches > 1:
-            raise NoUniqueMatch
+            raise NoUniqueMatch([], MANAGER_MOCK)
         else:
             return matches[0]
 

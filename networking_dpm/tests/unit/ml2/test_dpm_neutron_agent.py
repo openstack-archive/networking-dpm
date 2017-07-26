@@ -32,6 +32,9 @@ OID_A = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
 OID_B = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
 OID_C = "cccccccc-cccc-cccc-cccc-cccccccccccc"
 
+MANAGER_MOCK = mock.Mock()
+MANAGER_MOCK.resource_class.__name__ = "foo"
+
 
 class TestPhysnetMapping(base.BaseTestCase):
 
@@ -278,7 +281,8 @@ class TestDPMManager(base.BaseTestCase):
 
     def test_get_all_devices_connection_error(self):
         vswitch_bad = mock.Mock()
-        vswitch_bad.get_connected_nics.side_effect = ConnectionError("foo")
+        vswitch_bad.get_connected_nics.side_effect = ConnectionError(
+            [], MANAGER_MOCK)
         self.mgr.vswitches = [vswitch_bad]
 
         devices = self.mgr.get_all_devices()

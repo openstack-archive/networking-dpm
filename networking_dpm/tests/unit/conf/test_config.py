@@ -30,14 +30,16 @@ class TestConfig(base.BaseTestCase):
         cfg.CONF.set_override('hmc', 'hmc-ip', 'dpm')
         cfg.CONF.set_override('hmc_username', 'username', 'dpm')
         cfg.CONF.set_override('hmc_password', 'password', 'dpm')
-        cfg.CONF.set_override('cpc_object_id', 'oid', 'dpm')
+        cfg.CONF.set_override('cpc_object_id',
+                              'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'dpm')
         cfg.CONF.set_override('physical_network_adapter_mappings', mappings,
                               'dpm')
 
         self.assertEqual('hmc-ip', cfg.CONF.dpm.hmc)
         self.assertEqual('username', cfg.CONF.dpm.hmc_username)
         self.assertEqual('password', cfg.CONF.dpm.hmc_password)
-        self.assertEqual('oid', cfg.CONF.dpm.cpc_object_id)
+        self.assertEqual('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+                         cfg.CONF.dpm.cpc_object_id)
         self.assertEqual(mappings_parsed,
                          cfg.CONF.dpm.physical_network_adapter_mappings)
 
