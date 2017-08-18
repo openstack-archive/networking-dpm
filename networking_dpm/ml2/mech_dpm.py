@@ -17,7 +17,7 @@
 from neutron_lib.api.definitions import portbindings
 from oslo_log import log
 
-from neutron._i18n import _LW
+from neutron._i18n import _
 from neutron.plugins.common import constants as p_constants
 from neutron.plugins.ml2 import driver_api as api
 from neutron.plugins.ml2.drivers import mech_agent
@@ -33,7 +33,6 @@ VLAN_MODE_INBAND = 'inband'
 
 class DPMMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
     """Attach to networks using DPM L2 Agent.
-
     The DPMMechanismDriver integrates the ml2 plugin with the
     DPM L2 agent. Port binding with this driver requires the
     dpm agent to be running on the port's host, and that agent
@@ -64,12 +63,12 @@ class DPMMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
 
         object_ids = self.get_mappings(agent)[physnet]
         if not object_ids:
-            LOG.warning(_LW("No Object-IDs found in agents %(agent)s mapping "
+            LOG.warning(_("No Object-IDs found in agents %(agent)s mapping "
                             "for physical network %(net)s."), {'agent': agent,
                                                                'net': physnet})
             return False
         if len(object_ids) > 1:
-            LOG.warning(_LW("More than one Object-ID for physical network "
+            LOG.warning(_("More than one Object-ID for physical network "
                             "%(net)s on agent %(agent)s found but only a "
                             "single Object-ID is supported. Therefore the "
                             "first one is being chosen!"), {'agent': agent,
