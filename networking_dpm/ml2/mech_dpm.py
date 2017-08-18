@@ -17,7 +17,6 @@
 from neutron_lib.api.definitions import portbindings
 from oslo_log import log
 
-from neutron._i18n import _LW
 from neutron.plugins.common import constants as p_constants
 from neutron.plugins.ml2 import driver_api as api
 from neutron.plugins.ml2.drivers import mech_agent
@@ -64,16 +63,16 @@ class DPMMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
 
         object_ids = self.get_mappings(agent)[physnet]
         if not object_ids:
-            LOG.warning(_LW("No Object-IDs found in agents %(agent)s mapping "
-                            "for physical network %(net)s."), {'agent': agent,
-                                                               'net': physnet})
+            LOG.warning("No Object-IDs found in agents %(agent)s mapping "
+                        "for physical network %(net)s.", {'agent': agent,
+                                                          'net': physnet})
             return False
         if len(object_ids) > 1:
-            LOG.warning(_LW("More than one Object-ID for physical network "
-                            "%(net)s on agent %(agent)s found but only a "
-                            "single Object-ID is supported. Therefore the "
-                            "first one is being chosen!"), {'agent': agent,
-                                                            'net': physnet})
+            LOG.warning("More than one Object-ID for physical network "
+                        "%(net)s on agent %(agent)s found but only a "
+                        "single Object-ID is supported. Therefore the "
+                        "first one is being chosen!", {'agent': agent,
+                                                       'net': physnet})
         # TODO(andreas_s): In the first release only a single adapter/vswitch
         # per physical network is supported
         object_id = object_ids[0]

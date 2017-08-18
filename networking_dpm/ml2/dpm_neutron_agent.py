@@ -27,9 +27,6 @@ from networking_dpm.conf import config
 from networking_dpm.ml2 import constants as const
 from networking_dpm.ml2.mech_dpm import AGENT_TYPE_DPM
 
-from neutron._i18n import _LE
-from neutron._i18n import _LI
-from neutron._i18n import _LW
 from neutron.api.rpc.handlers import securitygroups_rpc as sg_rpc
 from neutron.common import config as common_config
 from neutron.common import topics
@@ -75,11 +72,9 @@ class PhysicalNetworkMapping(object):
                 'port': int(port)
             })
         except zhmcclient.NotFound:
-            LOG.error(
-                _LE("No vswitch object for adapter/port combination "
-                    "%(adapt)s/%(port)s found. Agent terminated!"),
-                {'adapt': adapter_id, 'port': port}
-            )
+            LOG.error("No vswitch object for adapter/port combination "
+                      "%(adapt)s/%(port)s found. Agent terminated!",
+                      {'adapt': adapter_id, 'port': port})
             sys.exit(1)
 
     def _add_vswitch(self, physnet, adapter_id, port):
@@ -87,10 +82,10 @@ class PhysicalNetworkMapping(object):
         self._vswitches.append(vswitch)
         if self._physnet_mapping.get(physnet):
             # TODO(andreas_s): Lift this restriction
-            LOG.error(_LE("Multiple vswitches for physical network "
-                          "%(net)s defined but only a single vswitch "
-                          "definition per physical network is supported."
-                          "Agent terminated!"),
+            LOG.error("Multiple vswitches for physical network "
+                      "%(net)s defined but only a single vswitch "
+                      "definition per physical network is supported."
+                      "Agent terminated!",
                       {'net': physnet})
             sys.exit(1)
         self._physnet_mapping[physnet] = [vswitch.get_property('object-id')]
@@ -101,9 +96,9 @@ class PhysicalNetworkMapping(object):
             # whole list of items is retrieved
             return self._cpc.adapters.find(**{'object-id': adapter_id})
         except zhmcclient.NotFound:
-            LOG.error(_LE("Configured adapter %s could not be "
-                          "found. Please update the agent "
-                          "configuration. Agent terminated!"),
+            LOG.error("Configured adapter %s could not be "
+                      "found. Please update the agent "
+                      "configuration. Agent terminated!",
                       adapter_id)
             sys.exit(1)
 
@@ -111,10 +106,10 @@ class PhysicalNetworkMapping(object):
     def _validate_adapter_type(adapter):
         adapt_type = adapter.get_property('type')
         if adapt_type not in ['osd', 'hipersockets']:
-            LOG.error(_LE("Configured adapter %s is not an OSA "
-                          "or a hipersockets adapter. Please update "
-                          "the agent configuration. Agent "
-                          "terminated!"), adapter)
+            LOG.error("Configured adapter %s is not an OSA "
+                      "or a hipersockets adapter. Please update "
+                      "the agent configuration. Agent "
+                      "terminated!", adapter)
             sys.exit(1)
 
     @staticmethod
@@ -124,11 +119,10 @@ class PhysicalNetworkMapping(object):
             # whole list of items is retrieved
             adapter.ports.find(**{'element-id': port})
         except zhmcclient.NotFound:
-            LOG.error(_LE("Configured port %(port)s for adapter "
-                          "%(adapt)s does not exist. Please update "
-                          "the agent configuration. Agent "
-                          "terminated!"), {'adapt': adapter,
-                                           'port': port})
+            LOG.error("Configured port %(port)s for adapter "
+                      "%(adapt)s does not exist. Please update "
+                      "the agent configuration. Agent "
+                      "terminated!", {'adapt': adapter, 'port': port})
             sys.exit(1)
 
     @staticmethod
@@ -260,8 +254,8 @@ class DPMManager(amb.CommonAgentManagerBase):
                     LOG.debug("NIC %s got deleted concurrently."
                               "Continuing...", nic)
                 else:
-                    LOG.warning(_LW("NIC %(nic)s will be reported as "
-                                    "'DOWN' due to error: %(err)s"),
+                    LOG.warning("NIC %(nic)s will be reported as "
+                                "'DOWN' due to error: %(err)s",
                                 {'nic': nic, 'err': http_error})
         return macs
 
@@ -278,16 +272,16 @@ class DPMManager(amb.CommonAgentManagerBase):
                 devices = devices.union(
                     self._filter_agent_managed_nic_macs(nics))
             except zhmcclient.ConnectionError as con_err:
-                LOG.error(_LE(
+                LOG.error(
                     "%(message)s, %(details)s. Lost connection to HMC of "
                     "CPC %(cpc)s. All NICs of this CPC and its corresponding "
-                    "Neutron ports wil be reported as 'DOWN'."),
+                    "Neutron ports wil be reported as 'DOWN'.",
                     {"cpc": self.cpc, "message": con_err,
                      "details": con_err.details})
 
             except zhmcclient.HTTPError as http_error:
                 if http_error.http_status == const.HTTP_STATUS_NOT_FOUND:
-                    LOG.error(_LE(
+                    LOG.error(
                         "An unrecoverable error occurred: %(err)s "
                         "DPM vSwitch object %(vswitch)s is "
                         "not available anymore. This can happen if "
@@ -296,16 +290,16 @@ class DPMManager(amb.CommonAgentManagerBase):
                         "hipersockets network got deleted. Please "
                         "check the physical_network_adapter_mappings "
                         "configuration and start the "
-                        "agent again. Agent terminated!"),
+                        "agent again. Agent terminated!",
                         {'vswitch': vswitch, 'err': http_error})
                     # Need to exit with sys.exit, as calling code catches
                     # exceptions
                     sys.exit(1)
 
-                LOG.warning(_LW("An error occurred while retrieving the "
-                                "connected nics of vswitch %(vswitch)s: "
-                                "%(err)s. All NICs of this vswitch will "
-                                "be reported as 'DOWN'."),
+                LOG.warning("An error occurred while retrieving the "
+                            "connected nics of vswitch %(vswitch)s: "
+                            "%(err)s. All NICs of this vswitch will "
+                            "be reported as 'DOWN'.",
                             {'vswitch': vswitch, 'err': http_error})
         return devices
 
@@ -343,11 +337,11 @@ def _validate_firewall_driver():
     supported_fw_drivers = ['neutron.agent.firewall.NoopFirewallDriver',
                             'noop']
     if fw_driver not in supported_fw_drivers:
-        LOG.error(_LE('Unsupported configuration option for "SECURITYGROUP.'
-                      'firewall_driver"! Only the NoopFirewallDriver is '
-                      'supported by DPM agent, but "%s" is configured. '
-                      'Set the firewall_driver to "noop" and start the '
-                      'agent again. Agent terminated!'),
+        LOG.error('Unsupported configuration option for "SECURITYGROUP.'
+                  'firewall_driver"! Only the NoopFirewallDriver is '
+                  'supported by DPM agent, but "%s" is configured. '
+                  'Set the firewall_driver to "noop" and start the '
+                  'agent again. Agent terminated!',
                   fw_driver)
         sys.exit(1)
 
@@ -357,9 +351,9 @@ def _get_cpc(client, cpc_oid):
         cpc = client.cpcs.find(**{'object-id': cpc_oid})
         if cpc.dpm_enabled:
             return cpc
-        LOG.error(_LE("CPC %s not in DPM mode.") % cpc_oid)
+        LOG.error("CPC %s not in DPM mode." % cpc_oid)
     except zhmcclient.NotFound:
-        LOG.error(_LE("Could not find CPC with object-id %s") % cpc_oid)
+        LOG.error("Could not find CPC with object-id %s" % cpc_oid)
     sys.exit(1)
 
 
@@ -371,8 +365,8 @@ def setup_logging():
     logging.set_defaults(default_log_levels=logging.get_default_log_levels() +
                          ["zhmcclient=WARNING"])
     logging.setup(CONF, 'neutron')
-    LOG.info(_LI("Logging enabled!"))
-    LOG.info(_LI("%(prog)s"), {'prog': sys.argv[0]})
+    LOG.info("Logging enabled!")
+    LOG.info("%(prog)s", {'prog': sys.argv[0]})
     LOG.debug("command line: %s", " ".join(sys.argv))
 
 
@@ -399,5 +393,5 @@ def main():
                                quitting_rpc_timeout,
                                AGENT_TYPE_DPM,
                                DPM_AGENT_BINARY)
-    LOG.info(_LI("Agent initialized successfully, now running... "))
+    LOG.info("Agent initialized successfully, now running... ")
     service.launch(CONF, agent).wait()
