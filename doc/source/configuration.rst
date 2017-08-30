@@ -28,7 +28,7 @@ ML2 config file *ml2_conf.ini*::
   mechanism_drivers = ovs,dpm
 
 More details can be found in the OpenStack Configuration Reference on
-`docs.openstack.org <http://docs.openstack.org/>`_.
+`docs.openstack.org <https://docs.openstack.org/>`_.
 
 Neutron DPM agent
 =================
@@ -49,7 +49,7 @@ configuration file:
 * [agent] polling_interval
 
 More details can be found in the OpenStack Configuration Reference on
-`docs.openstack.org <http://docs.openstack.org/>`_.
+`docs.openstack.org <https://docs.openstack.org/>`_.
 
 DPM-specific options
 --------------------
