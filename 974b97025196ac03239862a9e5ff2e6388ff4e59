@@ -1,0 +1,8 @@
+Code-Review+2: Andreas Scheuring <andreas.scheuring@de.ibm.com>
+Workflow+1: Andreas Scheuring <andreas.scheuring@de.ibm.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 30 Aug 2017 13:09:03 +0000
+Reviewed-on: https://review.openstack.org/485912
+Project: openstack/networking-dpm
+Branch: refs/heads/master
