@@ -15,9 +15,9 @@
 #    under the License.
 
 from neutron_lib.api.definitions import portbindings
+from neutron_lib import constants as p_constants
 from oslo_log import log
 
-from neutron.plugins.common import constants as p_constants
 from neutron.plugins.ml2 import driver_api as api
 from neutron.plugins.ml2.drivers import mech_agent
 
