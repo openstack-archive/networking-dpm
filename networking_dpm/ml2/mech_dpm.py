@@ -27,6 +27,7 @@ AGENT_TYPE_DPM = 'DPM agent'
 VIF_TYPE_DPM_VSWITCH = 'dpm_vswitch'
 VIF_TYPE_DPM_ADAPTER = 'dpm_adapter'
 VIF_DETAILS_OBJECT_ID = 'object_id'
+VLAN_MODE = 'vlan_mode'
 VLAN_MODE_INBAND = 'inband'
 
 
@@ -47,7 +48,7 @@ class DPMMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
             {portbindings.CAP_PORT_FILTER: False})
 
     def get_allowed_network_types(self, agent):
-        return [p_constants.TYPE_FLAT]
+        return [p_constants.TYPE_FLAT, p_constants.TYPE_VLAN]
 
     def get_mappings(self, agent):
         return agent.get('configurations', {}).get('adapter_mappings', {})
@@ -78,6 +79,14 @@ class DPMMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
         object_id = object_ids[0]
 
         vif_details_segment = self.vif_details
+
+        network_type = segment[api.NETWORK_TYPE]
+        if network_type == p_constants.TYPE_VLAN:
+            vlan_id = segment[api.SEGMENTATION_ID]
+            vif_details_segment[portbindings.VIF_DETAILS_VLAN] = vlan_id
+            # In the initial release only inband VLANs are supported.
+            # Nova uses this field to setup the VLANs accordingly.
+            vif_details_segment[VLAN_MODE] = VLAN_MODE_INBAND
 
         vif_details_segment[VIF_DETAILS_OBJECT_ID] = object_id
         # TODO(andreas_s): For RoCE Support add the port-element-id to the
