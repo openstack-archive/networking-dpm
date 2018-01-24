@@ -108,3 +108,27 @@ class DPMMechanismVlanTestCase(DPMMechanismBaseTestCase,
                                        vnic_type=self.VNIC_TYPE)
         self.driver.bind_port(context)
         self._check_unbound(context)
+
+
+class DPMMechanismMixedTestCase(DPMMechanismBaseTestCase):
+    def test_vlan_flat_mixed(self):
+        """Ensure that vif_details are unique per vif"""
+
+        driver = mech_dpm.DPMMechanismDriver()
+        flat_segment = DPMMechanismFlatTestCase.FLAT_SEGMENTS[1]
+        vlan_segment = DPMMechanismVlanTestCase.VLAN_SEGMENTS[1]
+
+        context = base.FakePortContext(self.AGENT_TYPE,
+                                       self.AGENTS_NO_VSWITCH,
+                                       segments=[vlan_segment, flat_segment],
+                                       vnic_type=self.VNIC_TYPE)
+
+        result = driver.try_to_bind_segment_for_agent(context, vlan_segment,
+                                                      self.AGENT)
+        self.assertTrue(result)
+        self.assertEqual(1234, context._bound_vif_details.get("vlan"))
+
+        result = driver.try_to_bind_segment_for_agent(context, flat_segment,
+                                                      self.AGENT)
+        self.assertTrue(result)
+        self.assertIsNone(context._bound_vif_details.get("vlan"))
