@@ -76,7 +76,7 @@ class DPMMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
         # per physical network is supported
         object_id = object_ids[0]
 
-        vif_details_segment = self.vif_details
+        vif_details_segment = self.vif_details.copy()
 
         network_type = segment[api.NETWORK_TYPE]
         if network_type == p_constants.TYPE_VLAN:
