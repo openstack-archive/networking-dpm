@@ -21,6 +21,9 @@ DPM_AGENT_CONF="etc/neutron/plugins/ml2/neutron_dpm_agent.conf"
 #DPM_AGENT_CONF="${Q_PLUGIN_CONF_PATH}/dpm_agent.ini"
 DPM_AGENT_BINARY="${NEUTRON_BIN_DIR}/neutron-dpm-agent"
 
+# Install networking dpm
+setup_develop $NETWORKING_DPM_DIR
+
 # check for service enabled
 if is_service_enabled q-dpm-agt; then
 
@@ -30,9 +33,7 @@ if is_service_enabled q-dpm-agt; then
         :
 
     elif [[ "$1" == "stack" && "$2" == "install" ]]; then
-        # Perform installation of service source
-        setup_develop $NETWORKING_DPM_DIR
-
+        :
 
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         # Configure after the other layer 1 and 2 services have been configured
