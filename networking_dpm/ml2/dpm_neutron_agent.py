@@ -18,6 +18,7 @@ import re
 from requests.packages import urllib3
 import sys
 
+from neutron_lib.agent import topics
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_service import service
@@ -29,7 +30,6 @@ from networking_dpm.ml2.mech_dpm import AGENT_TYPE_DPM
 
 from neutron.api.rpc.handlers import securitygroups_rpc as sg_rpc
 from neutron.common import config as common_config
-from neutron.common import topics
 from neutron.plugins.ml2.drivers.agent import _agent_manager_base as amb
 from neutron.plugins.ml2.drivers.agent import _common_agent as ca
 
