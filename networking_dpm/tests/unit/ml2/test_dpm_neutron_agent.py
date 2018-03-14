@@ -17,6 +17,7 @@
 import sys
 
 import mock
+from neutron_lib.agent import topics
 from zhmcclient import ConnectionError
 from zhmcclient import HTTPError
 
@@ -25,8 +26,6 @@ from networking_dpm.ml2.dpm_neutron_agent import (PhysicalNetworkMapping as
                                                   dpm_map)
 from networking_dpm.tests import base
 from networking_dpm.tests.unit import fake_zhmcclient
-
-from neutron.common import topics
 
 OID_A = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
 OID_B = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
