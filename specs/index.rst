@@ -1,6 +1,16 @@
 Specs
 =====
 
+Rocky
+------
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+
+
+   rocky/*
+
 Queens
 ------
 
