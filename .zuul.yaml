@@ -1,0 +1,19 @@
+---
+- project:
+    templates:
+      - system-required
+      - openstack-python-jobs-neutron
+      - openstack-python35-jobs-neutron
+      - check-requirements
+      - docs-on-readthedocs
+      - publish-to-pypi-neutron
+    check:
+      jobs:
+        - build-openstack-sphinx-docs:
+            required-projects:
+              - openstack/neutron
+    gate:
+      jobs:
+        - build-openstack-sphinx-docs:
+            required-projects:
+              - openstack/neutron
