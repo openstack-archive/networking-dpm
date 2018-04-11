@@ -80,15 +80,16 @@ class PhysicalNetworkMapping(object):
     def _add_vswitch(self, physnet, adapter_id, port):
         vswitch = self._get_vswitch(adapter_id, port)
         self._vswitches.append(vswitch)
-        if self._physnet_mapping.get(physnet):
-            # TODO(andreas_s): Lift this restriction
-            LOG.error("Multiple vswitches for physical network "
-                      "%(net)s defined but only a single vswitch "
-                      "definition per physical network is supported."
-                      "Agent terminated!",
-                      {'net': physnet})
+        if not self._physnet_mapping.get(physnet):
+            self._physnet_mapping[physnet] = []
+        if vswitch.get_property('object-id') in self._physnet_mapping[physnet]:
+            LOG.error("The adapter %(adapt)s is specified twice for the "
+                      "physical network  %(physnet)s. Please update the agent "
+                      "configuration. Agent terminated!",
+                      {"adapt": adapter_id, "physnet": physnet})
             sys.exit(1)
-        self._physnet_mapping[physnet] = [vswitch.get_property('object-id')]
+        self._physnet_mapping[physnet].append(
+            vswitch.get_property('object-id'))
 
     def _get_adapter(self, adapter_id):
         try:

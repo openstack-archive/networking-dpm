@@ -128,8 +128,10 @@ class TestPhysnetMapping(base.BaseTestCase):
                         "physnet1:" + OID_B + ":0"]
         self.flags(group="dpm", physical_network_adapter_mappings=conf_mapping)
 
-        adapters = [{'object-id': OID_A, 'type': 'osd'},
-                    {'object-id': OID_B, 'type': 'osd'}]
+        adapters = [{'object-id': OID_A, 'type': 'osd',
+                     'ports': [{'element-id': '0'}]},
+                    {'object-id': OID_B, 'type': 'osd',
+                     'ports': [{'element-id': '0'}]}]
         hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
             {"backing-adapter-uri": "/api/adapters/" + OID_A,
              "object-id": "vswitch-uuid-1",
@@ -138,9 +140,26 @@ class TestPhysnetMapping(base.BaseTestCase):
              "object-id": "vswitch-uuid-3",
              "port": 0}], "adapters": adapters}]}
         cpc = fake_zhmcclient.get_cpc(hmc)
+        mapping_obj = dpm_map.create_mapping(cpc)
+        mapping = mapping_obj.get_mapping()
+
+        expected = {'physnet1': ['vswitch-uuid-1', 'vswitch-uuid-3']}
+        self.assertEqual(expected, mapping)
+
+    def test_create_mapping_same_adapter_in_multiple_physnets(self):
+        conf_mapping = ["physnet1:" + OID_A + ":0",
+                        "physnet1:" + OID_A + ":0"]
+        self.flags(group="dpm", physical_network_adapter_mappings=conf_mapping)
+
+        adapters = [{'object-id': OID_A, 'type': 'osd',
+                    'ports': [{'element-id': '0'}]}]
+        hmc = {"cpcs": [{"object-id": "cpcpid", "vswitches": [
+            {"backing-adapter-uri": "/api/adapters/" + OID_A,
+             "object-id": "vswitch-uuid-1",
+             "port": 0}], "adapters": adapters}]}
+        cpc = fake_zhmcclient.get_cpc(hmc)
         self.assertRaises(SystemExit,
-                          dpm_map.create_mapping,
-                          cpc)
+                          dpm_map.create_mapping, cpc)
 
 
 class TestDPMRPCCallbacks(base.BaseTestCase):
