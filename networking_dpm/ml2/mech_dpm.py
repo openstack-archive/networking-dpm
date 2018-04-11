@@ -56,6 +56,8 @@ class DPMMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
         return False
 
     def try_to_bind_segment_for_agent(self, context, segment, agent):
+        network = context.network
+        LOG.debug("XXX net: %s", str(network.current))
         if not self.check_segment_for_agent(segment, agent):
             return False
         physnet = segment['physical_network']
