@@ -1,0 +1,19 @@
+- project:
+    check:
+      jobs:
+        - networking-dpm-fullstack
+- job:
+    name: networking-dpm-fullstack
+    parent: legacy-dsvm-base
+    run: playbooks/networking-dpm-fullstack/run.yaml
+    post-run: playbooks/networking-dpm-fullstack/post.yaml
+    timeout: 7800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/neutron
+      - openstack/networking-dpm
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^neutron/locale/.*$
+      - ^releasenotes/.*$
