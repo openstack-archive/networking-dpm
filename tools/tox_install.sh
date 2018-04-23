@@ -14,7 +14,7 @@
 # pip install {opts} {packages}
 
 ZUUL_CLONER=/usr/zuul-env/bin/zuul-cloner
-BRANCH_NAME=master
+BRANCH_NAME="stable/pike"
 neutron_installed=$(echo "import neutron" | python 2>/dev/null ; echo $?)
 NEUTRON_DIR=$HOME/neutron
 
@@ -64,6 +64,7 @@ else
     $install_cmd -U -e ${NEUTRON_PIP_LOCATION}
 fi
 
-$install_cmd -U $*
+if [ -n "$*" ]; then
+    $install_cmd -U $*
+fi
 exit $?
-
