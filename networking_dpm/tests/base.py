@@ -27,4 +27,4 @@ class BaseTestCase(base.BaseTestCase):
         """Override config variables for a test."""
         group = kw.pop('group', None)
         for k, v in kw.items():
-            cfg.CONF.set_override(k, v, group, enforce_type=True)
+            cfg.CONF.set_override(k, v, group)

@@ -176,6 +176,9 @@ class DPMManager(amb.CommonAgentManagerBase):
         self.vswitches = vswitches
         self.cpc = cpc
 
+    def get_agent_api(self, **kwargs):
+        pass
+
     def ensure_port_admin_state(self, device, admin_state_up):
         # Setting a port up/down is not supported by Neutron DPM agent. Ports
         # are always up.
