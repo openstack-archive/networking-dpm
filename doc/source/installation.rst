@@ -22,7 +22,7 @@ means.
 
 The networking-dpm package is released on PyPI as package `networking-dpm`_.
 
-.. _`networking-dpm`: https://pypi.python.org/pypi/networking-dpm
+.. _`networking-dpm`: https://pypi.org/project/networking-dpm
 
 The following table indicates which version of the networking-dpm package on
 PyPI to use for a particular OpenStack release:
